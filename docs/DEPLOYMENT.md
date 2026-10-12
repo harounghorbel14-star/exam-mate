@@ -49,6 +49,11 @@ CMD ["node", "--env-file-if-exists=.env", "apps/server/dist/index.js"]
 ```
 (This Dockerfile is not part of the tested pipeline; validate it in your environment.)
 
+## Static demo build
+`npm run build:demo -w @exammate/web` writes `apps/web/dist-demo`: relative asset paths, in-memory routing,
+no service worker and a demo banner. It runs without the API, so only on-device features work
+(solver, tools, coach, offline games). Server features show a "needs the ExamMate server" note.
+
 ## Mobile
 ```bash
 cd apps/mobile && npm install --no-workspaces

@@ -1,13 +1,14 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, MemoryRouter, Route, Routes } from 'react-router-dom';
 
-// The static demo build keeps navigation in memory so it works inside any host page.
-const Router = import.meta.env.VITE_DEMO ? MemoryRouter : BrowserRouter;
 import { I18nProvider } from './lib/i18n';
 import { AuthProvider } from './lib/auth';
 import { PrefsProvider } from './lib/prefs';
 import { Layout } from './components/Layout';
 import { Spinner } from './components/ui';
+
+// The static demo build keeps navigation in memory so it works inside any host page.
+const Router = import.meta.env.VITE_DEMO ? MemoryRouter : BrowserRouter;
 
 // Large modules are split so the first load stays small.
 const Home = lazy(() => import('./pages/Home'));
