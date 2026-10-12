@@ -1,0 +1,27 @@
+# Feature-completion matrix
+
+Legend: ✅ implemented and covered by automated tests · 🟡 implemented with stated limits ·
+❌ not implemented. **W** = web, **M** = mobile, **S** = server.
+
+| Module | Status | Where | Notes |
+|---|---|---|---|
+| **A. Smart Scan** | 🟡 | W M S | Camera (explicit permission) / import, rotate, drag-crop (W), crop/edit via OS picker (M), local tesseract OCR (S) with in-browser fallback (W), editable text, multi-question splitting, MCQ choice detection, question-type detection, chemistry O/0 OCR repair, save to library, confidence %. Diagrams and handwriting are **not** interpreted. Mobile OCR needs the server. |
+| **B. AI Question Solver** | 🟡 | W M S | Deterministic: algebra (linear, quadratic with exact surds, polynomial, transcendental, systems), calculus (derivatives, polynomial antiderivatives, numeric integrals), statistics, units, physics formulas (21) with word-problem parsing in en/fr/ar, chemistry balancing and molar mass. Biology, history, geography, languages and CS knowledge questions are answered **only** from the user's documents or a local model; otherwise the result is "unsupported". |
+| **C. Quick Answer Mode** | ✅ | W M | Short / steps / explain simply / hint / check my answer / similar question; translate needs a local model. Preferred style is remembered (synced). Web shortcuts: Ctrl+Enter, Alt+1…7, `/`, Esc. |
+| **D. Multi-language** | ✅ | W M S | en/fr/ar, full RTL on web (mobile needs an app restart to flip layout), math isolated LTR, language picker independent of the device, localised numbers and dates, OCR language selection, localised solver steps. New languages: add a typed dictionary (`packages/core/src/i18n`). |
+| **E. PDF Brain** | 🟡 | W S (M: list/upload/ask) | PDF/DOCX/TXT/MD; background processing; RAG over Postgres full-text with page citations; summary, flashcards (saved as decks), quiz, revision sheet (premium), formulas and definitions; organised by course, exam and subject; deletion removes file and index. Generation is **extractive** (no model needed); scanned PDFs need OCR page by page. |
+| **F. Math & Science Engine** | ✅ | W M S | KaTeX rendering, symbolic simplify/derivative, graph plotter, scientific notation, unit conversion with dimension checks, equation balancing, step-by-step derivations, independent numeric verification. Geometry diagrams are not drawn. |
+| **G. Voice Tutor** | 🟡 | W (M: read-aloud) | Speech-to-text (Web Speech API, single utterance, explicit button), read-aloud with adjustable speed and language, text fallback. Follow-up questions are typed. STT depends on browser support; mobile STT is not implemented. |
+| **H. Exam Simulator** | ✅ | W S | Timed exams, MCQ / true-false / numeric / short / written, counts, difficulty, seeded randomisation, rubrics, auto-grading, manual review, results and per-question time analysis, wrong-answer review, custom question bank, templates, strategy mode. Not on mobile. |
+| **I. Memory Mode** | ✅ | W M S | SM-2 spaced repetition, active recall, daily sessions, formula/vocabulary decks, leech ("often forgotten") tracking, offline bundle and queued reviews. |
+| **J. Weakness Detector** | ✅ | W M S | Weak topics and subjects, repeated mistakes, time management, explained reasons, multi-day plan with pin/skip/minutes overrides. |
+| **K. Quick Tools** | ✅ | W | Calculator, scientific calculator, unit converter, formula library, periodic table, balancer + molar mass, graph plotter, notes (offline local / synced), study timer, saved questions, bookmarks, recent documents. Customisable order and visibility; offline vs online is labelled. Flashcards have their own section. |
+| **L. Answer Verification** | ✅ | W M S | Second computation path for every deterministic tool; failed checks downgrade confidence; results stored with each solution; document answers quote the source; no invented citations. |
+| **M. Personal AI Brain** | ✅ | W S | Level, subjects, goals, style and studied concepts; review, edit, delete, delete all; on/off switch; export; 180-day retention for inferred items; sensitive-data filter. |
+| **Offline games (15)** | ✅ | W M | All 15 playable offline with scoring, levels, stars, restart, instructions, local persistence, conflict-free sync, downloadable packs (with integrity hash). Tested per game, level, locale and seed. |
+| **Exam Strategy Coach** | ✅ | W | Time allocation, MCQ elimination expected value, pattern / checking / partial-credit tips, strategy practice mode, post-exam analysis. Restricted assessment mode disables the solvers. |
+| **Auth & security** | ✅ | S W M | See [SECURITY.md](SECURITY.md). |
+| **Monetisation** | 🟡 | S W | Free / Premium plans with configurable quotas and feature gates; **test-mode** checkout only. No real payment provider. |
+| **Proprietary agent (no external AI)** | 🟡 | S | Loop, planner, tools, memory, RAG, budgets, traces, evaluation, classifier training with rollback, and a local model runtime are all implemented and tested. Answer quality with a real open-weight model is **not** verified (weights could not be downloaded here). |
+| **PWA / offline web** | ✅ | W | Precached app shell, games, solver and tools; OCR assets cached on first use; offline queues sync on reconnect. |
+| **Mobile app** | 🟡 | M | Home, Scan, Solver, Games (all 15), Flashcards (offline), Documents, Progress, Settings / login. Exams, Coach and Quick Tools are web-only. Tested with Jest and Metro bundles for both platforms; **not run on a device or emulator** here. |

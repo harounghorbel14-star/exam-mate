@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: exammate
+          POSTGRES_PASSWORD: exammate_dev_password
+          POSTGRES_DB: exammate_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U exammate" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgres://exammate:exammate_dev_password@localhost:5432/exammate_test
+      E2E_DATABASE_URL: postgres://exammate:exammate_dev_password@localhost:5432/exammate_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npm run build -w @exammate/core
+      - run: npm run typecheck
+      - run: npm test -w @exammate/core
+      - run: npm test -w @exammate/server
+      - run: npm test -w @exammate/web
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+        working-directory: apps/web
+      - run: npm run e2e
+      - name: Agent evaluation (regression gate)
+        run: npm run eval
+        env:
+          DATABASE_URL: postgres://exammate:exammate_dev_password@localhost:5432/exammate_test
+
+  mobile:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm ci --no-workspaces
+      - run: npx tsc --noEmit
+      - run: npx jest
+      - run: npx expo export --platform android --output-dir dist-android
+        env: { EXPO_OFFLINE: '1', CI: '1' }

@@ -12,7 +12,10 @@
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
     "dev:server": "npm run dev -w @exammate/server",
-    "dev:web": "npm run dev -w @exammate/web"
+    "dev:web": "npm run dev -w @exammate/web",
+    "test:mobile": "cd apps/mobile && npx jest",
+    "e2e": "npm run e2e -w @exammate/web",
+    "eval": "npm run eval -w @exammate/server"
   },
   "engines": {
     "node": ">=20"
