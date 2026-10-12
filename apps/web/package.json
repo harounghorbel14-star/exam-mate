@@ -11,7 +11,8 @@
     "test": "vitest run",
     "e2e": "playwright test",
     "predev": "node scripts/copy-ocr-assets.mjs",
-    "prebuild": "node scripts/copy-ocr-assets.mjs"
+    "prebuild": "node scripts/copy-ocr-assets.mjs",
+    "build:demo": "VITE_DEMO=1 vite build --outDir dist-demo"
   },
   "dependencies": {
     "@exammate/core": "0.1.0",

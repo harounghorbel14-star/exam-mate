@@ -3,7 +3,11 @@ import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import path from 'node:path';
 
+const DEMO = !!process.env.VITE_DEMO;
+
 export default defineConfig({
+  // Demo build: relative asset paths, no service worker (for static hosting without the API).
+  base: DEMO ? './' : '/',
   resolve: {
     dedupe: ['react', 'react-dom'],
     // Consume the shared core from source so the app always matches it.
@@ -14,7 +18,7 @@ export default defineConfig({
   },
   plugins: [
     react(),
-    VitePWA({
+    !DEMO && VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['icon.svg', 'icon-192.png', 'icon-512.png'],
       manifest: {

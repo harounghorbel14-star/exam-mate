@@ -1,5 +1,8 @@
 import { lazy, Suspense } from 'react';
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, MemoryRouter, Route, Routes } from 'react-router-dom';
+
+// The static demo build keeps navigation in memory so it works inside any host page.
+const Router = import.meta.env.VITE_DEMO ? MemoryRouter : BrowserRouter;
 import { I18nProvider } from './lib/i18n';
 import { AuthProvider } from './lib/auth';
 import { PrefsProvider } from './lib/prefs';
@@ -29,7 +32,7 @@ export function App() {
     <I18nProvider>
       <AuthProvider>
         <PrefsProvider>
-          <BrowserRouter>
+          <Router>
             <Suspense fallback={<div className="content"><Spinner /></div>}>
               <Routes>
                 <Route element={<Layout />}>
@@ -57,7 +60,7 @@ export function App() {
                 </Route>
               </Routes>
             </Suspense>
-          </BrowserRouter>
+          </Router>
         </PrefsProvider>
       </AuthProvider>
     </I18nProvider>
