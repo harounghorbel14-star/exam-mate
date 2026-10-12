@@ -1,0 +1,29 @@
+{
+  "expo": {
+    "name": "ExamMate AI",
+    "slug": "exammate-ai",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "backgroundColor": "#0b1220",
+    "scheme": "exammate",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "ai.exammate.app",
+      "infoPlist": { "NSCameraUsageDescription": "ExamMate uses the camera only when you tap Take photo, to scan a question.", "NSPhotoLibraryUsageDescription": "ExamMate reads an image only when you choose one to scan." }
+    },
+    "android": {
+      "package": "ai.exammate.app",
+      "adaptiveIcon": { "foregroundImage": "./assets/icon.png", "backgroundColor": "#0b1220" },
+      "permissions": ["CAMERA"],
+      "blockedPermissions": ["android.permission.RECORD_AUDIO"]
+    },
+    "plugins": [
+      ["expo-image-picker", { "cameraPermission": "ExamMate uses the camera only when you tap Take photo, to scan a question.", "microphonePermission": false }],
+      "expo-secure-store",
+      "expo-localization"
+    ],
+    "extra": { "defaultApiUrl": "http://10.0.2.2:4000" }
+  }
+}

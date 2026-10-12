@@ -392,4 +392,9 @@ export const ar: Record<MessageKey, string> = {
   'plan.activity.practice': 'تمارين',
   'plan.activity.flashcards': 'البطاقات التعليمية',
   'plan.activity.timed-drill': 'تدريب موقوت',
+  'scan.mobileNeedsServer': 'على الهاتف، يتم التعرف على النص في خادم ExamMate. سجّل الدخول واتصل، أو اكتب السؤال.',
+  'settings.restartForRtl': 'أعد تشغيل التطبيق لتطبيق اتجاه التخطيط الجديد.',
+  'sync.now': 'زامن الآن',
+  'settings.server': 'عنوان الخادم',
+  'settings.mobileVoiceNote': 'تستخدم القراءة بصوت عالٍ صوت جهازك. الإدخال الصوتي متاح في تطبيق الويب.',
 };

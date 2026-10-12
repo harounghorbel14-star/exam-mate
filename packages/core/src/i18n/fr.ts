@@ -392,4 +392,9 @@ export const fr: Record<MessageKey, string> = {
   'plan.activity.practice': 'Exercices',
   'plan.activity.flashcards': 'Cartes mémoire',
   'plan.activity.timed-drill': 'Entraînement chronométré',
+  'scan.mobileNeedsServer': 'Sur mobile, la reconnaissance de texte s’exécute sur le serveur ExamMate. Connecte-toi ou tape la question.',
+  'settings.restartForRtl': 'Redémarre l’application pour appliquer le nouveau sens d’affichage.',
+  'sync.now': 'Synchroniser',
+  'settings.server': 'Adresse du serveur',
+  'settings.mobileVoiceNote': 'La lecture à voix haute utilise la voix de l’appareil. La saisie vocale est disponible sur l’application web.',
 };

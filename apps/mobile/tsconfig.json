@@ -1,0 +1,12 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": { "@exammate/core": ["../../packages/core/src/index.ts"], "@exammate/core/*": ["../../packages/core/src/*"], "mathjs": ["./node_modules/mathjs"] }
+  },
+  "include": ["index.ts", "App.tsx", "src", "../../packages/core/src"],
+  "exclude": ["../../packages/core/src/**/*.test.ts"]
+}

@@ -390,6 +390,11 @@ export const en = {
   'plan.activity.practice': 'Practice questions',
   'plan.activity.flashcards': 'Flashcards',
   'plan.activity.timed-drill': 'Timed drill',
+  'scan.mobileNeedsServer': 'On mobile, text recognition runs on the ExamMate server. Sign in and connect, or type the question.',
+  'settings.restartForRtl': 'Restart the app to apply the new layout direction.',
+  'sync.now': 'Sync now',
+  'settings.server': 'Server address',
+  'settings.mobileVoiceNote': 'Read-aloud uses your device voice. Voice input is available in the web app.',
 };
 
 export type MessageKey = keyof typeof en;
