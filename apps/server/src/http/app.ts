@@ -17,9 +17,11 @@ import { examsRouter } from './routes/exams.js';
 import { progressRouter } from './routes/progress.js';
 import { billingRouter } from './routes/billing.js';
 import { agentRouter } from './routes/agent.js';
+import { multiplayerRouter } from './routes/multiplayer.js';
+import type { RoomManager } from '../multiplayer/rooms.js';
 import '../services/documentJobs.js';
 
-export function createApp() {
+export function createApp(opts: { rooms?: RoomManager } = {}) {
   const app = express();
   app.disable('x-powered-by');
   if (config.TRUST_PROXY) app.set('trust proxy', 1);
@@ -53,6 +55,7 @@ export function createApp() {
   app.use('/api/progress', progressRouter);
   app.use('/api/billing', billingRouter);
   app.use('/api/agent', agentRouter);
+  app.use('/api/mp', multiplayerRouter(opts.rooms ?? null));
   app.use('/api', (_req, res) => res.status(404).json({ error: { code: 'not_found', message: 'Unknown endpoint' } }));
 
   // Optionally serve the built web app (single-origin deployment).

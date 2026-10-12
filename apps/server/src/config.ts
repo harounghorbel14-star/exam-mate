@@ -37,6 +37,11 @@ const schema = z.object({
   AGENT_MAX_STEPS: z.coerce.number().default(8),
   AGENT_TIMEOUT_MS: z.coerce.number().default(30000),
   TRACE_RETENTION_DAYS: z.coerce.number().default(30),
+  // Online multiplayer (WebSocket on the same server, path /ws).
+  MP_ENABLED: bool.default(true),
+  MP_TURN_SECONDS: z.coerce.number().int().min(5).max(600).default(30),
+  MP_RECONNECT_GRACE_SECONDS: z.coerce.number().int().min(5).max(3600).default(60),
+  MP_ROOM_IDLE_MINUTES: z.coerce.number().int().min(1).max(1440).default(15),
 });
 
 export type Config = z.infer<typeof schema>;
