@@ -26,6 +26,9 @@ export function HomeScreen({ navigation }: { navigation: { navigate(name: string
           <Button title={t('nav.flashcards')} onPress={() => navigation.navigate('Flashcards')} />
           <Button title={t('nav.documents')} onPress={() => navigation.navigate('Documents')} />
           <Button title={t('nav.progress')} onPress={() => navigation.navigate('Progress')} />
+          <Button title={t('nav.exams')} onPress={() => navigation.navigate('Exams')} />
+          <Button title={t('nav.tools')} onPress={() => navigation.navigate('Tools')} />
+          <Button title={t('nav.coach')} onPress={() => navigation.navigate('Coach')} />
         </View>
       </Card>
     </Screen>

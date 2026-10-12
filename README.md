@@ -65,11 +65,11 @@ Set the API address in the app's **Settings → Server address**. The default is
 
 | Command | What it runs |
 |---|---|
-| `npm test -w @exammate/core` | 140 unit tests: engines, games, SRS, sync, i18n parity, classifier gate |
-| `npm test -w @exammate/server` | 60 integration tests against a real PostgreSQL test DB (`exammate_test`), real OCR and the real llama.cpp runtime |
+| `npm test -w @exammate/core` | 147 unit tests: engines, games, SRS, sync, i18n parity, classifier gate |
+| `npm test -w @exammate/server` | 62 integration tests against a real PostgreSQL test DB (`exammate_test`), real OCR and the real llama.cpp runtime |
 | `npm test -w @exammate/web` | 3 component tests (jsdom) |
 | `npm run e2e` | 6 Playwright tests: register → solve, RTL, document Q&A, offline solver, offline game, axe accessibility |
-| `npm run test:mobile` | 3 Jest tests rendering mobile screens offline |
+| `npm run test:mobile` | 6 Jest tests rendering mobile screens (solver, games, tools, coach, exams) |
 | `npm run eval` | Agent benchmark suites; stores the run and fails on regressions |
 
 Current measured results are in [docs/TESTING.md](docs/TESTING.md).

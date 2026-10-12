@@ -17,6 +17,10 @@ It is not a compliance certification; no external audit has been performed.
 - [x] **Authorization:** every resource query filters by `user_id`, and other users' resources
   return 404. Tested for documents, questions, solutions, decks, cards, attempts, notes and
   memory. Admin routes check the role.
+- [x] **Account lockout:** after 5 consecutive failures, keyed by a hash of the email, so unknown
+  emails behave identically (no enumeration). The lock starts at 15 minutes and doubles with
+  each further failure (24 h cap). A successful login or a password reset clears it, and
+  `Retry-After` is returned.
 - [x] **Rate limiting:** global (300/min/IP), auth (20 per 15 min), solve/scan (30/min/user).
   Daily plan quotas are enforced atomically with advisory locks (a concurrency test checks
   this).
@@ -67,7 +71,7 @@ It is not a compliance certification; no external audit has been performed.
   feature.
 - [ ] Malware scanning of uploads (e.g. ClamAV) before processing.
 - [ ] Encryption at rest for object storage and database (an infrastructure setting).
-- [ ] Account lockout / CAPTCHA after repeated failures (currently only IP rate limiting).
+- [ ] CAPTCHA after repeated failures.
 - [ ] MFA.
 - [ ] A real payment provider with signed webhooks.
 - [ ] Rate-limit store shared across instances (the current limiter is in-memory per process).

@@ -14,6 +14,9 @@ import { FlashcardsScreen } from './src/screens/FlashcardsScreen';
 import { DocumentsScreen } from './src/screens/DocumentsScreen';
 import { ProgressScreen } from './src/screens/ProgressScreen';
 import { SettingsScreen } from './src/screens/SettingsScreen';
+import { ExamsScreen } from './src/screens/ExamsScreen';
+import { ToolsScreen } from './src/screens/ToolsScreen';
+import { CoachScreen } from './src/screens/CoachScreen';
 
 const Tabs = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -43,6 +46,9 @@ function Root() {
         <Stack.Screen name="Flashcards" component={FlashcardsScreen} options={{ title: t('nav.flashcards') }} />
         <Stack.Screen name="Documents" component={DocumentsScreen} options={{ title: t('nav.documents') }} />
         <Stack.Screen name="Progress" component={ProgressScreen} options={{ title: t('nav.progress') }} />
+        <Stack.Screen name="Exams" component={ExamsScreen} options={{ title: t('nav.exams') }} />
+        <Stack.Screen name="Tools" component={ToolsScreen} options={{ title: t('nav.tools') }} />
+        <Stack.Screen name="Coach" component={CoachScreen} options={{ title: t('nav.coach') }} />
       </Stack.Navigator>
     </NavigationContainer>
   );
