@@ -45,6 +45,7 @@ export function ArcadeScreen({ navigation }: { navigation: { navigate(name: stri
         <View style={{ gap: 10 }}>
           <Title>🕹️ {t('arcade.title')}</Title>
           <P muted>{t('arcade.subtitle')}</P>
+          <Button title={`🌐 ${t('nav.play')}`} onPress={() => navigation.navigate('PlayOnline', {})} />
           <P style={{ fontWeight: '700' }}>{t('arcade.summary', { played: sum.gamesPlayed, plays: sum.plays, wins: sum.wins })}</P>
           <Input value={q} onChangeText={setQ} placeholder={t('arcade.search')} accessibilityLabel={t('arcade.search')} />
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>

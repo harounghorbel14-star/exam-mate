@@ -18,6 +18,7 @@ import { ExamsScreen } from './src/screens/ExamsScreen';
 import { ToolsScreen } from './src/screens/ToolsScreen';
 import { CoachScreen } from './src/screens/CoachScreen';
 import { ArcadeScreen, ArcadePlayScreen } from './src/screens/ArcadeScreen';
+import { PlayOnlineScreen } from './src/screens/PlayOnlineScreen';
 
 const Tabs = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -45,6 +46,7 @@ function Root() {
       <Stack.Navigator>
         <Stack.Screen name="Tabs" component={TabsRoot} options={{ headerShown: false }} />
         <Stack.Screen name="GamePlay" component={GamePlayScreen as never} options={{ title: t('nav.games') }} />
+        <Stack.Screen name="PlayOnline" component={PlayOnlineScreen} options={{ title: t('nav.play') }} />
         <Stack.Screen name="ArcadePlay" component={ArcadePlayScreen as never} options={{ title: t('nav.arcade') }} />
         <Stack.Screen name="Flashcards" component={FlashcardsScreen} options={{ title: t('nav.flashcards') }} />
         <Stack.Screen name="Documents" component={DocumentsScreen} options={{ title: t('nav.documents') }} />
