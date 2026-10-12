@@ -1,0 +1,14 @@
+{
+  "name": "exammate",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": ["packages/*", "apps/server", "apps/web"],
+  "scripts": {
+    "build": "npm run build -w @exammate/core && npm run build -w @exammate/server && npm run build -w @exammate/web",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "dev:server": "npm run dev -w @exammate/server",
+    "dev:web": "npm run dev -w @exammate/web"
+  },
+  "engines": { "node": ">=20" }
+}

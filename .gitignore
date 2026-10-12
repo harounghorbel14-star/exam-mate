@@ -1,0 +1,11 @@
+node_modules/
+dist/
+coverage/
+.env
+*.log
+apps/server/storage/
+apps/server/models/*.gguf
+apps/web/test-results/
+apps/web/playwright-report/
+apps/mobile/.expo/
+.DS_Store
