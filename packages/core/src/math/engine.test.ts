@@ -93,3 +93,11 @@ d('helpers', () => {
     expect(s.points.some(([, y]) => y === null)).toBe(true);
   });
 });
+
+d('constants in equations', () => {
+  it('treats pi and e as numbers, so large roots are found exactly', () => {
+    expect(solveEquation('x = 4/3 * pi * 27').numeric?.[0]).toBeCloseTo(113.0973355, 6);
+    expect(solveEquation('2x = 300 * e').numeric?.[0]).toBeCloseTo(150 * Math.E, 9);
+    expect(solveEquation('x^2 = 400 * pi').numeric?.map((v) => Math.round(v * 1e6) / 1e6)).toEqual([-35.449077, 35.449077]);
+  });
+});

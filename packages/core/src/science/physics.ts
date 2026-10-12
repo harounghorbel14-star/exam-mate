@@ -50,7 +50,7 @@ export const PHYSICS_VARIABLES: Record<string, PhysicsVariable> = {
   T: { symbol: 'T', unit: 's', keywords: ['period', 'période', 'دور', 'الدور'], nonNegative: true },
   lam: { symbol: 'lam', unit: 'm', keywords: ['wavelength', 'longueur d\'onde', 'طول الموجة'], nonNegative: true },
   k: { symbol: 'k', unit: 'N/m', keywords: ['spring constant', 'stiffness', 'raideur', 'ثابت النابض'], nonNegative: true },
-  x: { symbol: 'x', unit: 'm', keywords: ['extension', 'compression', 'allongement', 'استطالة'] },
+  x: { symbol: 'x', unit: 'm', keywords: ['extension', 'compression', 'stretched', 'compressed', 'extended', 'allongement', 'étiré', 'استطالة'] },
   Qh: { symbol: 'Qh', unit: 'J', keywords: ['heat', 'thermal energy', 'chaleur', 'حرارة', 'كمية الحرارة'] },
   c: { symbol: 'c', unit: 'J/(kg K)', keywords: ['specific heat', 'capacité thermique massique', 'السعة الحرارية'], nonNegative: true },
   dT: { symbol: 'dT', unit: 'K', keywords: ['temperature change', 'temperature rise', 'variation de température', 'تغير درجة الحرارة'] },
@@ -159,7 +159,7 @@ export function solvePhysics(known: KnownQuantity[], unknown: string): MathResul
   };
 }
 
-const NUMBER_UNIT = /(-?\d+(?:[.,]\d+)?)\s*(km\/h|m\/s\^?2|m\/s²|m\/s|km|cm|mm|m²|m\^2|m³|m\^3|kg\/m\^?3|kg|g|mg|ms|min|h|s|kN|N|kJ|J|kW|W|mA|A|kΩ|Ω|ohm|V|Hz|kPa|Pa|°C|K|C|m)(?![a-zA-Z])/g;
+const NUMBER_UNIT = /(-?\d+(?:[.,]\d+)?)\s*(km\/h|m\/s\^?2|m\/s²|m\/s|km|cm|mm|m²|m\^2|m³|m\^3|kg\/m\^?3|kg|g|mg|ms|min|h|s|N\/m|kN|N|kJ|J|kW|W|mA|A|kΩ|Ω|ohm|V|Hz|kPa|Pa|°C|K|C|m)(?![a-zA-Z])/g;
 
 const UNIT_TO_CANDIDATES: Array<{ test: (u: string) => boolean; symbols: string[] }> = [
   { test: (u) => /^(km\/h|m\/s)$/.test(u), symbols: ['v', 'u'] },
@@ -168,6 +168,8 @@ const UNIT_TO_CANDIDATES: Array<{ test: (u: string) => boolean; symbols: string[
   { test: (u) => /^(ms|min|h|s)$/.test(u), symbols: ['t', 'T'] },
   { test: (u) => /^(kg|g|mg)$/.test(u), symbols: ['mass'] },
   { test: (u) => /^(kN|N)$/.test(u), symbols: ['F', 'Wt'] },
+  { test: (u) => u === 'N/m', symbols: ['k'] },
+  { test: (u) => u === 'K' || u === '°C', symbols: ['dT'] },
   { test: (u) => /^(kJ|J)$/.test(u), symbols: ['W', 'KE', 'PE', 'Qh'] },
   { test: (u) => /^(kW|W)$/.test(u), symbols: ['Pw'] },
   { test: (u) => /^(mA|A)$/.test(u), symbols: ['I'] },
@@ -182,6 +184,12 @@ const UNIT_TO_CANDIDATES: Array<{ test: (u: string) => boolean; symbols: string[
 ];
 
 /** Extract known quantities and the unknown from a natural-language physics question. */
+const INLINE_GIVEN = /\b([A-Za-zρ]{1,3})\s*=\s*(-?\d+(?:[.,]\d+)?)\s*((?:[A-Za-zΩ°]+(?:\^?\d)?(?:\s*[\/·*]\s*\(?[A-Za-z]+(?:\s+[A-Za-z]+)?\)?)*)?)/g;
+const INLINE_SYMBOLS: Record<string, string> = {
+  c: 'c', k: 'k', m: 'mass', g: 'g', v: 'v', u: 'u', a: 'a', t: 't', d: 'd', s: 'd', F: 'F', h: 'h', R: 'R', I: 'I', U: 'U', f: 'f', T: 'T',
+  Q: 'Q', x: 'x', rho: 'rho', 'ρ': 'rho', V: 'V', A: 'A', W: 'W', P: 'Pw', p: 'p', KE: 'KE', PE: 'PE',
+};
+
 const ARABIC_UNITS: Array<[RegExp, string]> = [
   [/(\d)\s*كم\/سا?(?![\u0600-\u06FF])/g, '$1 km/h'], [/(\d)\s*م\/ث²(?![\u0600-\u06FF])/g, '$1 m/s^2'], [/(\d)\s*م\/ث(?![\u0600-\u06FF²])/g, '$1 m/s'],
   [/(\d)\s*كم(?![\u0600-\u06FF])/g, '$1 km'], [/(\d)\s*سم(?![\u0600-\u06FF])/g, '$1 cm'], [/(\d)\s*كغ(?![\u0600-\u06FF])/g, '$1 kg'], [/(\d)\s*غ(?![\u0600-\u06FF])/g, '$1 g'],
@@ -192,9 +200,20 @@ const ARABIC_UNITS: Array<[RegExp, string]> = [
 export function parsePhysicsProblem(input: string): { known: KnownQuantity[]; unknown: string | null } {
   let text = input.replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x0660)).replace(/٫/g, '.');
   for (const [re, rep] of ARABIC_UNITS) text = text.replace(re, rep);
-  const lower = text.toLowerCase();
   const known: KnownQuantity[] = [];
   const taken = new Set<string>();
+  // Explicit "symbol = value unit" givens, e.g. "c = 4180 J/(kg K)" or "k = 200 N/m".
+  text = text.replace(INLINE_GIVEN, (whole, sym: string, num: string, unitRaw: string) => {
+    const symbol = INLINE_SYMBOLS[sym];
+    if (!symbol || taken.has(symbol)) return whole;
+    const unit = unitRaw.trim().replace(/[.,;]+$/, '');
+    let usable = unit;
+    try { if (unit) m.unit(1, normalizeUnit(unit)).toNumber(PHYSICS_VARIABLES[symbol]!.unit); } catch { usable = ''; }
+    known.push({ symbol, value: Number(num.replace(',', '.')), unit: usable });
+    taken.add(symbol);
+    return ' ';
+  });
+  const lower = text.toLowerCase();
   for (const match of text.matchAll(NUMBER_UNIT)) {
     const value = Number(match[1]!.replace(',', '.'));
     let unit = match[2]!.replace('²', '^2').replace('³', '^3').replace('Ω', 'ohm');

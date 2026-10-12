@@ -2,7 +2,7 @@
  * Versioned evaluation datasets for the agent. Expected values are hand-computed; never
  * produced by the system under test. Bump EVAL_DATASET_VERSION whenever a case changes.
  */
-export const EVAL_DATASET_VERSION = 'agent-eval-2026.10.1';
+export const EVAL_DATASET_VERSION = 'agent-eval-2026.10.2';
 
 export interface SolveCase { id: string; suite: 'math' | 'science' | 'multilingual'; question: string; expectNumbers?: number[]; expectText?: string; tolerance?: number }
 
@@ -32,6 +32,14 @@ export const SOLVE_CASES: SolveCase[] = [
   { id: 'm23', suite: 'math', question: 'simplify 2x + 3x', expectText: '5 * x' },
   { id: 'm24', suite: 'math', question: 'x^2 + 1 = 0', expectText: 'No real solution' },
   { id: 'm25', suite: 'math', question: 'A rectangle has a perimeter of 30 cm and a width of 5 cm. What is its length?', expectNumbers: [10] },
+  { id: 'm26', suite: 'math', question: 'Find the area of a circle with radius 3 cm', expectNumbers: [28.2743339], tolerance: 1e-6 },
+  { id: 'm27', suite: 'math', question: 'A right triangle has legs of 6 cm and 8 cm. Find the hypotenuse.', expectNumbers: [10] },
+  { id: 'm28', suite: 'math', question: 'A square has an area of 49 m². What is its perimeter?', expectNumbers: [28] },
+  { id: 'm29', suite: 'math', question: 'What is the volume of a cylinder with radius 2 m and height 5 m?', expectNumbers: [62.8318531], tolerance: 1e-6 },
+  { id: 'm30', suite: 'math', question: 'Un rectangle a une aire de 24 cm² et une largeur de 4 cm. Quelle est sa longueur ?', expectNumbers: [6] },
+  { id: 's17', suite: 'science', question: 'A spring with k = 200 N/m is stretched by 0.05 m. Find the force.', expectNumbers: [10] },
+  { id: 's18', suite: 'science', question: 'How much heat is needed to raise 0.5 kg of water by 20 °C? (c = 4180 J/(kg K))', expectNumbers: [41800] },
+  { id: 's19', suite: 'science', question: 'An object has a mass of 4 kg and a volume of 0.002 m³. What is its density?', expectNumbers: [2000] },
   { id: 's01', suite: 'science', question: 'convert 72 km/h to m/s', expectNumbers: [20] },
   { id: 's02', suite: 'science', question: 'convert 5 kg to g', expectNumbers: [5000] },
   { id: 's03', suite: 'science', question: 'convert 100 °C to °F', expectNumbers: [212] },

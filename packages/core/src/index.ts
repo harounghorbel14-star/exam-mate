@@ -3,6 +3,7 @@ export * from './math/engine.js';
 export * from './math/types.js';
 export * from './science/units.js';
 export * from './science/physics.js';
+export * from './science/geometry.js';
 export * from './chem/elements.js';
 export * from './chem/chemistry.js';
 export * from './srs/srs.js';

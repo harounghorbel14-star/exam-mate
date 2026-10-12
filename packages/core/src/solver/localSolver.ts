@@ -3,6 +3,7 @@ import { safeParse, normalizeMathInput } from '../math/mathjs.js';
 import type { MathResult } from '../math/types.js';
 import { convertUnits } from '../science/units.js';
 import { parsePhysicsProblem, solvePhysics } from '../science/physics.js';
+import { parseGeometryProblem, solveGeometry } from '../science/geometry.js';
 import { balanceEquation, molarMass } from '../chem/chemistry.js';
 import { detectQuestionType, type QuestionType } from '../text/questions.js';
 import { classifySubject, type SubjectLabel } from '../classify/index.js';
@@ -12,7 +13,7 @@ import { localizeStep } from './stepText.js';
 
 export type SolveMode = 'short' | 'steps' | 'simple' | 'hint' | 'check' | 'similar' | 'translate';
 
-export type ToolName = 'equation' | 'system' | 'evaluate' | 'simplify' | 'derivative' | 'integral' | 'statistics' | 'units' | 'physics' | 'chem-balance' | 'molar-mass';
+export type ToolName = 'equation' | 'system' | 'evaluate' | 'simplify' | 'derivative' | 'integral' | 'statistics' | 'units' | 'physics' | 'chem-balance' | 'molar-mass' | 'geometry';
 
 export interface SolveResponse {
   status: 'solved' | 'unsupported' | 'error';
@@ -87,6 +88,11 @@ export function routeQuestion(raw: string): Route | null {
     if (attempt.numeric?.length) return { tool: 'physics', run: () => attempt };
   }
   const percent = stripped.replace(PERCENT_OF, (_m, a: string, b: string) => `(${a.replace(',', '.')} / 100) * ${b.replace(',', '.')}`);
+  const geo = parseGeometryProblem(text);
+  if (geo) {
+    const attempt = solveGeometry(geo);
+    if (attempt.numeric?.length) return { tool: 'geometry', run: () => attempt };
+  }
   const expr = percent.replace(/^(?:what is|calculate|compute|evaluate|combien font|calcule[rz]?|احسب|كم يساوي)\s*/i, '').replace(/[=?]\s*$/, '');
   if (isMathy(expr) && /\d/.test(expr)) {
     try {
@@ -121,6 +127,7 @@ const SIMPLE_INTRO: Record<ToolName, Record<Locale, string>> = {
   units: { en: 'We rewrite the quantity using a conversion factor equal to 1 (for example 1 km = 1000 m), so the value changes but the amount does not.', fr: 'On réécrit la grandeur avec un facteur de conversion égal à 1 (par exemple 1 km = 1000 m) : la valeur change, pas la quantité.', ar: 'نعيد كتابة الكمية باستخدام معامل تحويل يساوي 1 (مثل 1 كم = 1000 م)، فتتغير القيمة لا الكمية.' },
   physics: { en: 'We list what we know, pick the formula that links it to what we want, convert to SI units and substitute.', fr: 'On liste les données, on choisit la formule qui les relie à l’inconnue, on convertit en unités SI et on remplace.', ar: 'نكتب المعطيات، ونختار القانون الذي يربطها بالمطلوب، ونحوّل إلى وحدات SI ثم نعوّض.' },
   'chem-balance': { en: 'Atoms are not created or destroyed, so each element must appear the same number of times on both sides. We choose whole numbers in front of each formula to make this true.', fr: 'Les atomes ne se créent ni ne disparaissent : chaque élément doit apparaître autant de fois de chaque côté. On choisit des nombres entiers devant chaque formule.', ar: 'الذرات لا تفنى ولا تُستحدث، لذا يجب أن يظهر كل عنصر بالعدد نفسه في الطرفين. نختار أعدادًا صحيحة أمام كل صيغة لتحقيق ذلك.' },
+  geometry: { en: 'We name what we know about the shape, pick the formula that links it to what we want, and solve for the missing measurement.', fr: 'On liste ce que l’on sait de la figure, on choisit la formule qui la relie à l’inconnue, puis on la résout.', ar: 'نحدد ما نعرفه عن الشكل، ونختار القانون الذي يربطه بالمطلوب، ثم نحل لإيجاد القياس الناقص.' },
   'molar-mass': { en: 'We add up the masses of all the atoms in the formula, using the periodic table.', fr: 'On additionne les masses de tous les atomes de la formule, grâce au tableau périodique.', ar: 'نجمع كتل جميع الذرات في الصيغة باستخدام الجدول الدوري.' },
 };
 
@@ -193,7 +200,7 @@ export function solveLocally(question: string, opts: { mode?: SolveMode; locale?
     return { status: 'error', subject, questionType, tool: route.tool, mode, confidence: 'unsupported', error: (e as Error).message };
   }
   result = { ...result, steps: result.steps.map((s) => ({ ...s, description: localizeStep(s.description, locale) })), warnings: result.warnings.map((w) => localizeStep(w, locale)), assumptions: result.assumptions.map((a) => localizeStep(a, locale)) };
-  const subjectFromTool: Partial<Record<ToolName, SubjectLabel>> = { physics: 'physics', 'chem-balance': 'chemistry', 'molar-mass': 'chemistry', units: 'physics' };
+  const subjectFromTool: Partial<Record<ToolName, SubjectLabel>> = { geometry: 'math', physics: 'physics', 'chem-balance': 'chemistry', 'molar-mass': 'chemistry', units: 'physics' };
   const base: SolveResponse = { status: 'solved', subject: subjectFromTool[route.tool] ?? (subject === 'general' ? 'math' : subject), questionType, tool: route.tool, mode, result, confidence: confidenceOf(result) };
   switch (mode) {
     case 'hint': {

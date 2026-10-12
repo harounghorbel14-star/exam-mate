@@ -200,9 +200,21 @@ export function polynomialRoots(coeffsLowToHigh: number[]): Array<{ re: number; 
   return roots.map((r) => ({ re: Math.abs(r.re) < 1e-10 ? 0 : r.re, im: Math.abs(r.im) < 1e-9 ? 0 : r.im }));
 }
 
+const NUMERIC_CONSTANTS: Record<string, number> = { pi: Math.PI, PI: Math.PI, e: Math.E, E: Math.E, tau: 2 * Math.PI, phi: (1 + Math.sqrt(5)) / 2 };
+
+/** Replace named constants by their values so e.g. "X = 4/3·π·27" is recognised as linear in X. */
+function withNumericConstants(node: MathNode): MathNode {
+  return node.transform((n: MathNode, _path: string, parent: MathNode | null) => {
+    const name = (n as unknown as { name?: string }).name;
+    const isFnName = parent && (parent as { isFunctionNode?: boolean }).isFunctionNode && (parent as unknown as { fn: MathNode }).fn === n;
+    if (n.type === 'SymbolNode' && name && !isFnName && NUMERIC_CONSTANTS[name] !== undefined) return new m.ConstantNode(NUMERIC_CONSTANTS[name]!);
+    return n;
+  });
+}
+
 function tryPolynomial(expr: MathNode, variable: string): number[] | null {
   try {
-    const res = m.rationalize(expr, {}, true) as unknown as { coefficients: number[]; variables: string[]; denominator?: MathNode | null };
+    const res = m.rationalize(withNumericConstants(expr), {}, true) as unknown as { coefficients: number[]; variables: string[]; denominator?: MathNode | null };
     if (!res.coefficients || res.coefficients.length === 0) return null;
     if (res.variables.length !== 1 || res.variables[0] !== variable) return null;
     return res.coefficients.map(Number);
