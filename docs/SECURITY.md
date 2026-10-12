@@ -62,6 +62,14 @@ It is not a compliance certification; no external audit has been performed.
   requested only on tap; the Android microphone permission is explicitly blocked.
 - [x] **Voice (web):** speech recognition runs only while the button is active
   (`continuous: false`); nothing is recorded in the background.
+- [x] **Multiplayer:** sockets authenticate with single-use, 60-second, hashed tickets issued by
+  the authenticated API (no long-lived token in URLs); browser Origins are checked; messages are
+  size-limited, strictly validated (unknown fields such as a client "score" are rejected) and rate
+  limited; the server validates every move, owns all timers and randomness (CSPRNG seeds) and
+  computes all scores; each player receives only their view (opponent RPS choices, face-down
+  cards, trivia answers and reaction go-times are withheld); stale steps and replayed action ids
+  are rejected and processing per connection is sequential; rooms can only be entered with their
+  code, are capped at 2–4 players and stop admitting players once a game starts.
 - [x] **Billing:** test mode only, with explicit confirmation; nothing can be charged.
 
 ## Not yet done / recommended before production
@@ -74,6 +82,7 @@ It is not a compliance certification; no external audit has been performed.
 - [ ] CAPTCHA after repeated failures.
 - [ ] MFA.
 - [ ] A real payment provider with signed webhooks.
+- [ ] Multiplayer across several API instances (needs sticky routing or pub/sub; single instance today).
 - [ ] Rate-limit store shared across instances (the current limiter is in-memory per process).
 - [ ] Test-mode checkout sessions are kept in memory; they are lost on restart and not shared
   between instances.

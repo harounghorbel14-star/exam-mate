@@ -17,6 +17,9 @@ import { SettingsScreen } from './src/screens/SettingsScreen';
 import { ExamsScreen } from './src/screens/ExamsScreen';
 import { ToolsScreen } from './src/screens/ToolsScreen';
 import { CoachScreen } from './src/screens/CoachScreen';
+import { ArcadeScreen, ArcadePlayScreen } from './src/screens/ArcadeScreen';
+import { PlayOnlineScreen } from './src/screens/PlayOnlineScreen';
+import { linking } from './src/lib/linking';
 
 const Tabs = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -31,6 +34,7 @@ function TabsRoot() {
       <Tabs.Screen name="Scan" component={ScanScreen} options={{ title: t('nav.scan'), tabBarIcon: icon('◉') }} />
       <Tabs.Screen name="Solver" component={SolverScreen} options={{ title: t('nav.solver'), tabBarIcon: icon('∑') }} />
       <Tabs.Screen name="Games" component={GamesScreen} options={{ title: t('nav.games'), tabBarIcon: icon('◆') }} />
+      <Tabs.Screen name="Arcade" component={ArcadeScreen as never} options={{ title: t('nav.arcade'), tabBarIcon: icon('🕹') }} />
       <Tabs.Screen name="Settings" component={SettingsScreen} options={{ title: t('nav.settings'), tabBarIcon: icon('⚙') }} />
     </Tabs.Navigator>
   );
@@ -39,10 +43,12 @@ function TabsRoot() {
 function Root() {
   const { t } = useApp();
   return (
-    <NavigationContainer theme={theme}>
+    <NavigationContainer theme={theme} linking={linking}>
       <Stack.Navigator>
         <Stack.Screen name="Tabs" component={TabsRoot} options={{ headerShown: false }} />
         <Stack.Screen name="GamePlay" component={GamePlayScreen as never} options={{ title: t('nav.games') }} />
+        <Stack.Screen name="PlayOnline" component={PlayOnlineScreen} options={{ title: t('nav.play') }} />
+        <Stack.Screen name="ArcadePlay" component={ArcadePlayScreen as never} options={{ title: t('nav.arcade') }} />
         <Stack.Screen name="Flashcards" component={FlashcardsScreen} options={{ title: t('nav.flashcards') }} />
         <Stack.Screen name="Documents" component={DocumentsScreen} options={{ title: t('nav.documents') }} />
         <Stack.Screen name="Progress" component={ProgressScreen} options={{ title: t('nav.progress') }} />

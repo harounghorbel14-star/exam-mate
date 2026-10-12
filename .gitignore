@@ -16,3 +16,5 @@ apps/web/public/ocr/
 apps/mobile/node_modules/
 apps/mobile/dist-*/
 apps/mobile/.expo/
+apps/web/dist-demo/
+apps/server/.e2e-storage/

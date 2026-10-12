@@ -3,7 +3,11 @@ import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import path from 'node:path';
 
+const DEMO = !!process.env.VITE_DEMO;
+
 export default defineConfig({
+  // Demo build: relative asset paths, no service worker (for static hosting without the API).
+  base: DEMO ? './' : '/',
   resolve: {
     dedupe: ['react', 'react-dom'],
     // Consume the shared core from source so the app always matches it.
@@ -14,13 +18,13 @@ export default defineConfig({
   },
   plugins: [
     react(),
-    VitePWA({
+    !DEMO && VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['icon.svg', 'icon-192.png', 'icon-512.png'],
       manifest: {
         name: 'ExamMate AI',
         short_name: 'ExamMate',
-        description: 'Private study companion: solver, documents, practice exams, flashcards and 15 offline games.',
+        description: 'Private study companion: solver, documents, practice exams, flashcards, 15 offline learning games and a 15-game arcade.',
         theme_color: '#0b1220',
         background_color: '#0b1220',
         display: 'standalone',
@@ -37,7 +41,7 @@ export default defineConfig({
         globIgnores: ['ocr/**'],
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
         navigateFallback: '/index.html',
-        navigateFallbackDenylist: [/^\/api\//],
+        navigateFallbackDenylist: [/^\/api\//, /^\/ws/],
         runtimeCaching: [
           // Offline OCR assets are large, so they are cached on first use instead of precached.
           { urlPattern: /\/ocr\//, handler: 'CacheFirst', options: { cacheName: 'ocr-assets', expiration: { maxEntries: 20 } } },
@@ -46,8 +50,8 @@ export default defineConfig({
       },
     }),
   ],
-  server: { port: 5173, proxy: { '/api': 'http://localhost:4000' } },
-  preview: { port: 4173, proxy: { '/api': 'http://localhost:4000' } },
+  server: { port: 5173, proxy: { '/api': 'http://localhost:4000', '/ws': { target: 'ws://localhost:4000', ws: true } } },
+  preview: { port: 4173, proxy: { '/api': 'http://localhost:4000', '/ws': { target: 'ws://localhost:4000', ws: true } } },
   build: { target: 'es2022', sourcemap: false, chunkSizeWarningLimit: 1500 },
   test: { environment: 'jsdom', include: ['src/**/*.test.{ts,tsx}'], setupFiles: ['./src/test/setup.ts'] },
 } as never);

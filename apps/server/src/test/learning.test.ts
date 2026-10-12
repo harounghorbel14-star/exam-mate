@@ -157,6 +157,24 @@ describe('offline game progress sync', () => {
     expect((await request(app).post('/api/progress/games/sync').set(auth(u)).send({ records: [{ ...web, gameId: 'not-a-game' }] })).status).toBe(400);
   });
 
+  it('syncs arcade stats separately, merging devices and rejecting unknown games or bad values', async () => {
+    const u = await makeUser();
+    const phone = { gameId: 'snake', bestScore: 300, bestTimeMs: 0, bestStreak: 0, streak: 0, lastPlayedAt: 5, updatedAt: 5, counters: { phone: { plays: 4, wins: 0, losses: 0, draws: 0, playMs: 60000 } } };
+    const web = { ...phone, bestScore: 120, lastPlayedAt: 9, updatedAt: 9, counters: { web: { plays: 2, wins: 0, losses: 0, draws: 0, playMs: 1000 } } };
+    await request(app).post('/api/progress/arcade/sync').set(auth(u)).send({ records: [phone] }).expect(200);
+    const r = await request(app).post('/api/progress/arcade/sync').set(auth(u)).send({ records: [web] }).expect(200);
+    const snake = r.body.progress.find((x: { gameId: string }) => x.gameId === 'snake');
+    expect(snake.bestScore).toBe(300);
+    expect(Object.keys(snake.counters).sort()).toEqual(['phone', 'web']);
+    const again = await request(app).post('/api/progress/arcade/sync').set(auth(u)).send({ records: [web] });
+    expect(again.body.progress[0].counters).toEqual(snake.counters);
+    expect((await request(app).post('/api/progress/arcade/sync').set(auth(u)).send({ records: [{ ...web, gameId: 'math-rush' }] })).status).toBe(400);
+    expect((await request(app).post('/api/progress/arcade/sync').set(auth(u)).send({ records: [{ ...web, bestScore: -1 }] })).status).toBe(400);
+    // educational progress is unaffected
+    expect((await request(app).get('/api/progress/games').set(auth(u))).body.progress).toEqual([]);
+    expect((await request(app).post('/api/progress/arcade/sync').send({ records: [] })).status).toBe(401);
+  });
+
   it('serves downloadable question packs with an integrity hash', async () => {
     const u = await makeUser();
     const list = await request(app).get('/api/progress/packs').set(auth(u));

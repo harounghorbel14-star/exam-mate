@@ -60,8 +60,8 @@ export function RequireAccount({ children }: { children: ReactNode }) {
   if (loading) return <Spinner />;
   if (!user) return (
     <div className="card stack" style={{ maxWidth: 520 }}>
-      <p>{t('auth.signInToUse')}</p>
-      <div className="row"><Link className="btn primary" to="/login">{t('auth.login')}</Link><Link className="btn" to="/register">{t('auth.register')}</Link></div>
+      <p>{import.meta.env.VITE_DEMO ? t('demo.needsServer') : t('auth.signInToUse')}</p>
+      {!import.meta.env.VITE_DEMO && <div className="row"><Link className="btn primary" to="/login">{t('auth.login')}</Link><Link className="btn" to="/register">{t('auth.register')}</Link></div>}
     </div>
   );
   return <>{children}</>;

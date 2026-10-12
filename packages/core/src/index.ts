@@ -19,3 +19,5 @@ export * from './content/banks.js';
 export * from './games/index.js';
 export * from './solver/localSolver.js';
 export * from './sync/canonical.js';
+export * from './arcade/index.js';
+export * from './multiplayer/index.js';

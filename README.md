@@ -2,7 +2,8 @@
 
 A private study companion for students: a **verified step-by-step solver**, **Smart Scan** (OCR),
 **document study tools with page citations**, **practice exams**, **spaced-repetition flashcards**,
-a **weakness detector**, an **exam strategy coach** and **15 offline games**. It ships as a web app
+a **weakness detector**, an **exam strategy coach**, **15 offline educational games**, an
+**Arcade of 15 entertainment games** (all offline) and **online multiplayer** with 2–4 players. It ships as a web app
 (installable PWA), an Expo mobile app (Android/iOS), and a Node/PostgreSQL API.
 
 ExamMate's "AI" is its own agent. It does **not** call OpenAI, Anthropic, Gemini or any hosted
@@ -22,8 +23,10 @@ If none of these can answer, ExamMate says so instead of guessing.
 ```
 packages/core      Shared TypeScript domain logic (web, mobile and server):
                    math/science/chemistry engines, local solver, SRS, grading, weakness detector,
-                   sync/merge, i18n (en/fr/ar), subject classifier, 15 game engines + bundled content
-apps/server        Express + PostgreSQL API, background jobs, OCR, retrieval, billing (test mode)
+                   sync/merge, i18n (en/fr/ar), subject classifier, 15 educational game engines + bundled
+                   content, 15 arcade game engines, multiplayer protocol/rules/client
+apps/server        Express + PostgreSQL API, background jobs, OCR, retrieval, billing (test mode),
+                   WebSocket multiplayer rooms (/ws)
   src/agent/       The ExamMate agent: core loop, planner, reasoning, tools, memory, knowledge,
                    models (local runtimes), training, evaluation, security, observability
 apps/web           React + Vite PWA (all 9 sections plus Quick Tools and Exam Coach)
@@ -65,11 +68,11 @@ Set the API address in the app's **Settings → Server address**. The default is
 
 | Command | What it runs |
 |---|---|
-| `npm test -w @exammate/core` | 147 unit tests: engines, games, SRS, sync, i18n parity, classifier gate |
-| `npm test -w @exammate/server` | 62 integration tests against a real PostgreSQL test DB (`exammate_test`), real OCR and the real llama.cpp runtime |
-| `npm test -w @exammate/web` | 3 component tests (jsdom) |
-| `npm run e2e` | 6 Playwright tests: register → solve, RTL, document Q&A, offline solver, offline game, axe accessibility |
-| `npm run test:mobile` | 6 Jest tests rendering mobile screens (solver, games, tools, coach, exams) |
+| `npm test -w @exammate/core` | 211 unit tests: engines, educational and arcade games, multiplayer rules, SRS, sync, i18n parity, classifier gate |
+| `npm test -w @exammate/server` | 78 integration tests against a real PostgreSQL test DB (`exammate_test`), real OCR, the real llama.cpp runtime and real WebSocket clients |
+| `npm test -w @exammate/web` | 10 component tests (jsdom) |
+| `npm run e2e` | 27 Playwright tests: the original 6, all 15 arcade games played in the browser, and multiplayer between independent browser clients |
+| `npm run test:mobile` | 25 Jest tests rendering mobile screens (solver, games, arcade, online play, tools, coach, exams) |
 | `npm run eval` | Agent benchmark suites; stores the run and fails on regressions |
 
 Current measured results are in [docs/TESTING.md](docs/TESTING.md).

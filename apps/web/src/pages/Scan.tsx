@@ -15,7 +15,8 @@ const OCR_LANGS: Record<string, string> = { en: 'eng', fr: 'fra+eng', ar: 'ara+e
 /** In-browser OCR fallback with assets served from our own origin (/ocr), usable offline once cached. */
 async function browserOcr(blob: Blob, langs: string): Promise<{ text: string; confidence: number }> {
   const { createWorker } = await import('tesseract.js');
-  const worker = await createWorker(langs.split('+'), 1, { workerPath: '/ocr/worker.min.js', corePath: '/ocr/', langPath: '/ocr/', gzip: true, workerBlobURL: false } as never);
+  const base = new URL(`${import.meta.env.BASE_URL}ocr/`, document.baseURI).href;
+  const worker = await createWorker(langs.split('+'), 1, { workerPath: `${base}worker.min.js`, corePath: base, langPath: base, gzip: true, workerBlobURL: false } as never);
   try {
     const { data } = await worker.recognize(blob);
     return { text: data.text.trim(), confidence: Math.round(data.confidence) };

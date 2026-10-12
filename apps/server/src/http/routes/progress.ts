@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { analyzeWeaknesses, buildStudyPlan, mergeGameProgress, GAME_IDS, type GameProgressRecord, type PracticeRecord } from '@exammate/core';
+import { analyzeWeaknesses, buildStudyPlan, mergeGameProgress, mergeArcadeStats, GAME_IDS, ARCADE_IDS, type ArcadeStatsRecord, type GameProgressRecord, type PracticeRecord } from '@exammate/core';
 import { pool } from '../../db/pool.js';
 import { asyncHandler, body, query, requireAuth } from '../middleware.js';
 import { notFound } from '../errors.js';
@@ -105,6 +105,45 @@ progressRouter.post('/games/sync', asyncHandler(async (req, res) => {
   }
   const all = await pool.query('SELECT record FROM game_progress WHERE user_id = $1', [req.user!.id]);
   res.json({ merged, progress: all.rows.map((r) => r.record) });
+}));
+
+// ---------------- Arcade stats sync (optional; arcade works fully offline) ----------------
+const n = z.number().int().min(0);
+const ArcadeRecord = z.object({
+  gameId: z.enum(ARCADE_IDS), bestScore: n.max(1e9), bestTimeMs: n.max(24 * 3600_000), bestStreak: n.max(1e6), streak: n.max(1e6),
+  lastPlayedAt: n, updatedAt: n,
+  counters: z.record(z.string().min(1).max(64), z.object({ plays: n, wins: n, losses: n, draws: n, playMs: n })).refine((c) => Object.keys(c).length <= 50, 'too many devices'),
+});
+
+progressRouter.get('/arcade', asyncHandler(async (req, res) => {
+  const { rows } = await pool.query('SELECT record FROM arcade_progress WHERE user_id = $1', [req.user!.id]);
+  res.json({ progress: rows.map((r) => r.record) });
+}));
+
+/** Same conflict-free merge as the client (core mergeArcadeStats): bests never regress, per-device counters add up. */
+progressRouter.post('/arcade/sync', asyncHandler(async (req, res) => {
+  const p = body(z.object({ records: z.array(ArcadeRecord).max(ARCADE_IDS.length) }), req);
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    for (const incoming of p.records as ArcadeStatsRecord[]) {
+      const { rows } = await client.query('SELECT record FROM arcade_progress WHERE user_id = $1 AND game_id = $2 FOR UPDATE', [req.user!.id, incoming.gameId]);
+      const result = rows[0] ? mergeArcadeStats(rows[0].record as ArcadeStatsRecord, incoming) : incoming;
+      await client.query(
+        `INSERT INTO arcade_progress (user_id, game_id, record) VALUES ($1, $2, $3)
+         ON CONFLICT (user_id, game_id) DO UPDATE SET record = $3, updated_at = now()`,
+        [req.user!.id, incoming.gameId, result],
+      );
+    }
+    await client.query('COMMIT');
+  } catch (e) {
+    await client.query('ROLLBACK');
+    throw e;
+  } finally {
+    client.release();
+  }
+  const all = await pool.query('SELECT record FROM arcade_progress WHERE user_id = $1', [req.user!.id]);
+  res.json({ progress: all.rows.map((r) => r.record) });
 }));
 
 progressRouter.get('/packs', asyncHandler(async (_req, res) => {

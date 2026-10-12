@@ -113,3 +113,23 @@ online answers come from identical logic.
 - **Mobile:** bottom tabs and a stack navigator, AsyncStorage for offline data, and SecureStore
   for the token. Camera and library access go through expo-image-picker, and permission is
   requested only on tap.
+
+## Arcade and online multiplayer
+
+- `packages/core/src/arcade/` holds the 15 entertainment games as pure, deterministic engines
+  (seeded `mulberry32`; time passed in by the caller), the trilingual catalogue, and
+  `ArcadeRepository` (stats, favourites, recents, settings, saved games) over the same
+  `KeyValueStore` used by the educational games. It is separate from `src/games/` so the
+  educational games and their sync format are untouched.
+- Web (`apps/web/src/arcade`, `pages/Arcade*.tsx`) and mobile (`apps/mobile/src/arcade`,
+  `screens/ArcadeScreen.tsx`) render the same engines; each game is its own lazy chunk on web and
+  is precached by the service worker.
+- `packages/core/src/multiplayer/` contains the protocol types and validator, the
+  server-authoritative rules (`mpInit`, `mpApply`, `mpTick`, `mpView`) reusing the arcade engines,
+  and `MultiplayerClient` (ticket auth, ack tracking, auto-reconnect and rejoin) used by both web
+  and React Native.
+- `apps/server/src/multiplayer/`: `tickets.ts` (single-use socket credentials), `rooms.ts`
+  (`RoomManager`: lobby, seats, host migration, timers, grace periods, sweeping, write-through
+  persistence and restore) and `ws.ts` (upgrade handling on the existing HTTP server, origin check,
+  rate limiting, heartbeat).
+

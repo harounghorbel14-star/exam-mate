@@ -11,7 +11,7 @@ export default function Games() {
   useEffect(() => { void gameRepo.all().then(setProgress); }, []);
   return (
     <>
-      <PageHead title={t('games.title')} subtitle={t('games.subtitle')} />
+      <PageHead title={t('games.title')} subtitle={t('games.subtitle')} actions={<Link to="/arcade" className="btn arcade-link">🕹 {t('nav.arcade')}</Link>} />
       <div className="grid cols-3">
         {GAMES.map((g) => {
           const p = progress[g.id];

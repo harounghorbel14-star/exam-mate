@@ -1,6 +1,6 @@
-import { mergeGameProgress, type GameProgressRecord } from '@exammate/core';
+import { mergeGameProgress, ArcadeRepository, type ArcadeStatsRecord, type GameProgressRecord } from '@exammate/core';
 import { api } from './api';
-import { gameRepo, readJson, writeJson } from './store';
+import { gameRepo, kv, deviceId, readJson, writeJson } from './store';
 
 const REVIEW_QUEUE = 'exammate.queue.reviews';
 export interface QueuedReview { cardId: string; rating: 'again' | 'hard' | 'good' | 'easy'; at: number; elapsedMs?: number }
@@ -21,4 +21,16 @@ export async function syncAll(): Promise<void> {
     await gameRepo.save(local ? mergeGameProgress(local, remote) : remote, false);
   }
   await gameRepo.clearDirty(dirty);
+  await syncArcade();
+}
+
+/** Optional arcade stats sync (signed in + online only); the arcade itself never needs the network. */
+export async function syncArcade(): Promise<void> {
+  const repo = new ArcadeRepository(kv, await deviceId());
+  const all = await repo.allStats();
+  const dirty = await repo.dirty();
+  const records = dirty.map((id) => all[id]).filter(Boolean) as ArcadeStatsRecord[];
+  const res = await api<{ progress: unknown[] }>('/progress/arcade/sync', { method: 'POST', body: { records } });
+  await repo.mergeRemote(res.progress);
+  await repo.clearDirty(dirty);
 }

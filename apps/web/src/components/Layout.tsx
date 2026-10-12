@@ -14,6 +14,8 @@ export const NAV: Array<{ to: string; key: MessageKey; icon: string; mobile?: bo
   { to: '/documents', key: 'nav.documents', icon: '▤' },
   { to: '/exams', key: 'nav.exams', icon: '✎' },
   { to: '/games', key: 'nav.games', icon: '◆', mobile: true },
+  { to: '/arcade', key: 'nav.arcade', icon: '🕹' },
+  { to: '/play', key: 'nav.play', icon: '🌐' },
   { to: '/flashcards', key: 'nav.flashcards', icon: '❏' },
   { to: '/progress', key: 'nav.progress', icon: '↗' },
   { to: '/settings', key: 'nav.settings', icon: '⚙', mobile: true },
@@ -65,8 +67,9 @@ export function Layout() {
             <option value="en">English</option><option value="fr">Français</option><option value="ar">العربية</option>
           </select>
           <button className="btn ghost icon-btn" aria-label={t('a11y.toggleTheme')} onClick={() => update({ theme: document.documentElement.dataset.theme === 'light' ? 'dark' : 'light' })}>◐</button>
-          {user ? <Link to="/settings" className="btn sm">{user.displayName}</Link> : <Link to="/login" className="btn sm primary">{t('auth.login')}</Link>}
+          {user ? <Link to="/settings" className="btn sm">{user.displayName}</Link> : !import.meta.env.VITE_DEMO && <Link to="/login" className="btn sm primary">{t('auth.login')}</Link>}
         </header>
+        {import.meta.env.VITE_DEMO && <div className="content" style={{ paddingBottom: 0 }}><div className="alert info" role="status">{t('demo.banner')}</div></div>}
         {!online && <div className="content" style={{ paddingBottom: 0 }}><div className="alert warning" role="status">{t('offline.banner')}</div></div>}
         <main id="main" className="content" tabIndex={-1}>
           <Outlet />
