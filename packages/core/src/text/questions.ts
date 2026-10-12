@@ -17,7 +17,17 @@ export function cleanOcrText(raw: string): string {
     .replace(/(?<=\d)[lI](?=\d)/g, '1')
     .replace(/[ \t]+/g, ' ')
     .replace(/\n{3,}/g, '\n\n')
+    .split('\n').map(fixChemistryLine).join('\n')
     .trim();
+}
+
+/** In chemical equations OCR often reads the letter O as zero (02, C02, H20). */
+export function fixChemistryLine(line: string): string {
+  if (!/(->|→|⟶|⇌)/.test(line)) return line;
+  return line
+    .replace(/(^|[\s+>→])(\d?)0(?=\d)/g, '$1$2O')
+    .replace(/([A-Z])0(?=\d|\s|$|[+\-→])/g, '$1O')
+    .replace(/([A-Z][a-z]?\d)0(?=\d|\s|$|[+\-→])/g, '$1O');
 }
 
 const QUESTION_START = /^\s*(?:(?:Q(?:uestion)?|Exercice|Exercise|Ex\.?|سؤال|السؤال|تمرين)\s*\d+\s*[.):-]?|\d{1,2}\s*[.)-](?!\d)|[٠-٩]{1,2}\s*[.)-])\s*/i;

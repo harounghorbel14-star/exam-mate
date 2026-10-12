@@ -23,7 +23,7 @@ export interface PhysicsFormula {
 }
 
 export const PHYSICS_VARIABLES: Record<string, PhysicsVariable> = {
-  v: { symbol: 'v', unit: 'm/s', keywords: ['speed', 'velocity', 'final velocity', 'final speed', 'vitesse', 'سرعة', 'السرعة'] },
+  v: { symbol: 'v', unit: 'm/s', keywords: ['speed', 'velocity', 'final velocity', 'final speed', 'vitesse', 'سرعة', 'السرعة', 'سرعت'] },
   u: { symbol: 'u', unit: 'm/s', keywords: ['initial velocity', 'initial speed', 'starts at', 'vitesse initiale', 'السرعة الابتدائية'] },
   a: { symbol: 'a', unit: 'm/s^2', keywords: ['acceleration', 'accélération', 'تسارع', 'التسارع'] },
   t: { symbol: 't', unit: 's', keywords: ['time', 'seconds', 'how long', 'temps', 'durée', 'زمن', 'الزمن', 'الوقت'], nonNegative: true },
@@ -36,7 +36,7 @@ export const PHYSICS_VARIABLES: Record<string, PhysicsVariable> = {
   Pw: { symbol: 'Pw', unit: 'W', keywords: ['power', 'puissance', 'قدرة', 'القدرة'] },
   KE: { symbol: 'KE', unit: 'J', keywords: ['kinetic energy', 'énergie cinétique', 'الطاقة الحركية'], nonNegative: true },
   PE: { symbol: 'PE', unit: 'J', keywords: ['potential energy', 'énergie potentielle', 'الطاقة الكامنة'] },
-  h: { symbol: 'h', unit: 'm', keywords: ['height', 'hauteur', 'ارتفاع', 'الارتفاع'] },
+  h: { symbol: 'h', unit: 'm', keywords: ['height', 'lifted', 'raised', 'dropped from', 'hauteur', 'soulev', 'ارتفاع', 'الارتفاع', 'رفع'] },
   p: { symbol: 'p', unit: 'kg m/s', keywords: ['momentum', 'quantité de mouvement', 'كمية الحركة'] },
   rho: { symbol: 'rho', unit: 'kg/m^3', keywords: ['density', 'masse volumique', 'كثافة', 'الكثافة'], nonNegative: true },
   V: { symbol: 'V', unit: 'm^3', keywords: ['volume', 'حجم', 'الحجم'], nonNegative: true },
@@ -182,7 +182,16 @@ const UNIT_TO_CANDIDATES: Array<{ test: (u: string) => boolean; symbols: string[
 ];
 
 /** Extract known quantities and the unknown from a natural-language physics question. */
-export function parsePhysicsProblem(text: string): { known: KnownQuantity[]; unknown: string | null } {
+const ARABIC_UNITS: Array<[RegExp, string]> = [
+  [/(\d)\s*كم\/سا?(?![\u0600-\u06FF])/g, '$1 km/h'], [/(\d)\s*م\/ث²(?![\u0600-\u06FF])/g, '$1 m/s^2'], [/(\d)\s*م\/ث(?![\u0600-\u06FF²])/g, '$1 m/s'],
+  [/(\d)\s*كم(?![\u0600-\u06FF])/g, '$1 km'], [/(\d)\s*سم(?![\u0600-\u06FF])/g, '$1 cm'], [/(\d)\s*كغ(?![\u0600-\u06FF])/g, '$1 kg'], [/(\d)\s*غ(?![\u0600-\u06FF])/g, '$1 g'],
+  [/(\d)\s*م(?![\u0600-\u06FF])/g, '$1 m'], [/(\d)\s*ث(?![\u0600-\u06FF])/g, '$1 s'], [/(\d)\s*د(?![\u0600-\u06FF])/g, '$1 min'], [/(\d)\s*ن(?![\u0600-\u06FF])/g, '$1 N'],
+  [/(\d)\s*ج(?![\u0600-\u06FF])/g, '$1 J'], [/(\d)\s*واط(?![\u0600-\u06FF])/g, '$1 W'], [/(\d)\s*فولت(?![\u0600-\u06FF])/g, '$1 V'], [/(\d)\s*أمبير(?![\u0600-\u06FF])/g, '$1 A'], [/(\d)\s*أوم(?![\u0600-\u06FF])/g, '$1 Ω'],
+];
+
+export function parsePhysicsProblem(input: string): { known: KnownQuantity[]; unknown: string | null } {
+  let text = input.replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x0660)).replace(/٫/g, '.');
+  for (const [re, rep] of ARABIC_UNITS) text = text.replace(re, rep);
   const lower = text.toLowerCase();
   const known: KnownQuantity[] = [];
   const taken = new Set<string>();
@@ -201,7 +210,7 @@ export function parsePhysicsProblem(text: string): { known: KnownQuantity[]; unk
   }
   if (/from rest|au repos|من السكون/.test(lower) && !taken.has('u')) known.push({ symbol: 'u', value: 0, unit: 'm/s' });
   // The unknown is the quantity named after a question word.
-  const qPart = lower.split(/(?:what is|what's|find|calculate|determine|how (?:much|far|long|fast)|quelle est|calculer|déterminer|calcule|احسب|ما هي|ما هو|أوجد)/).slice(1).join(' ');
+  const qPart = lower.split(/(?:what is|what's|find|calculate|determine|how (?:much|far|long|fast)|quelle est|calculer|déterminer|calcule|احسب|ما هي|ما هو|أوجد|(?:^|\s)ما\s|(?:^|\s)كم\s)/).slice(1).join(' ');
   let unknown: string | null = null;
   if (qPart) {
     let best = Infinity;

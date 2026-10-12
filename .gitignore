@@ -9,3 +9,6 @@ apps/web/test-results/
 apps/web/playwright-report/
 apps/mobile/.expo/
 .DS_Store
+apps/server/.test-storage/
+apps/server/.ocr-lang/
+apps/server/models/

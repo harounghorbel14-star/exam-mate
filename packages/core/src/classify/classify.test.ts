@@ -37,3 +37,13 @@ describe('question parsing', () => {
     expect(detectQuestionType('Explain the causes of World War I')).toBe('open');
   });
 });
+
+describe('OCR cleanup', () => {
+  it('fixes O/0 confusion only inside chemical equations', async () => {
+    const { fixChemistryLine, cleanOcrText } = await import('../text/questions.js');
+    expect(fixChemistryLine('Balance H2 + 02 -> H20')).toBe('Balance H2 + O2 -> H2O');
+    expect(fixChemistryLine('C3H8 + 502 -> 3C02 + 4H20')).toBe('C3H8 + 5O2 -> 3CO2 + 4H2O');
+    expect(fixChemistryLine('C10H22 + O2 -> CO2')).toBe('C10H22 + O2 -> CO2');
+    expect(cleanOcrText('x = 10 + 02')).toBe('x = 10 + 02');
+  });
+});

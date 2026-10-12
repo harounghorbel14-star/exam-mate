@@ -33,13 +33,14 @@ export interface SolveResponse {
 
 interface Route { tool: ToolName; run: () => MathResult }
 
-const DERIV = /^(?:find\s+the\s+)?(?:derivative\s+of|differentiate|d\/d([a-z])\s*|dérivée\s+de|dériver|مشتقة|اشتق)\s*(.+)$/i;
+const DERIV = /^(?:find\s+the\s+|calculate\s+the\s+|calcule[rz]?\s+la\s+|احسب\s+)?(?:derivative\s+of|differentiate|d\/d([a-z])\s*|dérivée\s+de|dériver|مشتقة|اشتق)\s*(.+)$/i;
 const INTEGRAL = /^(?:find\s+the\s+)?(?:integral\s+of|integrate|∫|intégrale\s+de|intégrer|تكامل)\s*(.+?)(?:\s+(?:from|de|من)\s+(-?[\d.]+|pi)\s+(?:to|à|a|إلى|الى)\s+(-?[\d.]+|pi))?(?:\s*d([a-z]))?\s*$/i;
 const CONVERT = /^(?:convert\s+|convertir\s+|حوّل\s+|حول\s+)?(-?[\d.,]+)\s*([^\d\s][^\s]*(?:\s*\/\s*[^\s]+)?)\s+(?:to|in|into|en|إلى|الى)\s+([^\s?]+)\s*\??$/i;
 const MOLAR = /(?:molar\s+mass\s+of|masse\s+molaire\s+(?:de|du|d['’])|الكتلة\s+المولية\s+(?:ل|لـ)?)\s*([A-Za-z0-9()[\]·]+)/i;
 const STATS = /(?:mean|average|median|mode|standard\s+deviation|variance|moyenne|médiane|écart[- ]type|المتوسط|الوسيط|الانحراف)/i;
 const SIMPLIFY = /^(?:simplify|simplifier|بسّط|بسط)\s+(.+)$/i;
-const SOLVE_PREFIX = /^(?:solve(?:\s+for\s+[a-z])?|résoudre|résous|حل|حلّ|find\s+x|trouver\s+x)\s*[:\-]?\s*/i;
+const SOLVE_PREFIX = /^(?:solve(?:\s+for\s+[a-z])?|résoudre|résous|resoudre|حل|حلّ|find\s+x|trouver\s+x)?\s*(?:the\s+equation|l['’]équation|l['’]equation|المعادلة|المعادلة\s+التالية)?\s*[:\-]?\s*/i;
+const PERCENT_OF = /(\d+(?:[.,]\d+)?)\s*%\s*(?:of|de|des|du|من)\s*(\d+(?:[.,]\d+)?)/gi;
 
 function parseBound(s: string | undefined): number | undefined {
   if (s === undefined) return undefined;
@@ -85,7 +86,8 @@ export function routeQuestion(raw: string): Route | null {
     const attempt = solvePhysics(known, unknown);
     if (attempt.numeric?.length) return { tool: 'physics', run: () => attempt };
   }
-  const expr = stripped.replace(/^(?:what is|calculate|compute|evaluate|combien font|calcule[rz]?|احسب|كم يساوي)\s*/i, '').replace(/[=?]\s*$/, '');
+  const percent = stripped.replace(PERCENT_OF, (_m, a: string, b: string) => `(${a.replace(',', '.')} / 100) * ${b.replace(',', '.')}`);
+  const expr = percent.replace(/^(?:what is|calculate|compute|evaluate|combien font|calcule[rz]?|احسب|كم يساوي)\s*/i, '').replace(/[=?]\s*$/, '');
   if (isMathy(expr) && /\d/.test(expr)) {
     try {
       const node = safeParse(normalizeMathInput(expr));

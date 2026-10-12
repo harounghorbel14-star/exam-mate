@@ -65,3 +65,14 @@ describe('modes', () => {
     expect(solveLocally('balance H2 -> O2').status).toBe('error');
   });
 });
+
+describe('robustness', () => {
+  it('handles percent-of, leading words and Arabic units', () => {
+    expect(solveLocally('What is 15% of 80?').result?.numeric?.[0]).toBe(12);
+    expect(solveLocally('حل المعادلة 2x + 4 = 10').result?.answer).toBe('x = 3');
+    expect(solveLocally('Résoudre l’équation 3x = 12').result?.answer).toBe('x = 4');
+    expect(solveLocally('Calcule la dérivée de x^2').tool).toBe('derivative');
+    expect(solveLocally('A 10 kg box is lifted 5 m. What is its potential energy?').result?.numeric?.[0]).toBeCloseTo(490.5, 6);
+    expect(solveLocally('سيارة تقطع 200 م في 10 ث. ما سرعتها؟').result?.numeric?.[0]).toBe(20);
+  });
+});
