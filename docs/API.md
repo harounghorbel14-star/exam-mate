@@ -21,7 +21,7 @@ Base path: `/api`. JSON in and out, with request bodies validated by zod.
 | 409 | `conflict` / `version_conflict` / `already_submitted` / `time_up` |
 | 413 | `payload_too_large` |
 | 423 | `assessment_mode` |
-| 429 | `quota_exceeded` / `rate_limited` |
+| 429 | `quota_exceeded` / `rate_limited` / `account_locked` (with `Retry-After`) |
 | 503 | `ocr_unavailable` |
 
 ## Auth — `/api/auth`
