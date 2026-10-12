@@ -12,3 +12,4 @@ apps/mobile/.expo/
 apps/server/.test-storage/
 apps/server/.ocr-lang/
 apps/server/models/
+apps/web/public/ocr/
