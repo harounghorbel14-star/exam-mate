@@ -9,7 +9,7 @@ import { hashToken, newToken } from '../../auth/tokens.js';
 import { sendMail } from '../../auth/mailer.js';
 import { audit } from '../../services/audit.js';
 import { asyncHandler, body, clientMeta, requireAuth, SESSION_COOKIE } from '../middleware.js';
-import { badRequest, conflict, unauthorized } from '../errors.js';
+import { HttpError, badRequest, conflict, unauthorized } from '../errors.js';
 
 export const authRouter = Router();
 
@@ -51,16 +51,35 @@ authRouter.post('/register', strict, asyncHandler(async (req, res) => {
   res.status(201).json({ user: { id: user.id, email: input.email, displayName: input.displayName, emailVerified: false }, token: session.token, expiresAt: session.expiresAt });
 }));
 
+export const LOCKOUT_THRESHOLD = 5;
+const LOCKOUT_BASE_MINUTES = 15;
+
 authRouter.post('/login', strict, asyncHandler(async (req, res) => {
   const input = body(z.object({ email: Email, password: z.string().max(200) }), req);
+  const emailHash = hashToken(`login:${input.email}`);
+  const lock = await pool.query('SELECT locked_until FROM login_attempts WHERE email_hash = $1 AND locked_until > now()', [emailHash]);
+  if (lock.rows[0]) {
+    const retryAfter = Math.ceil((new Date(lock.rows[0].locked_until).getTime() - Date.now()) / 1000);
+    res.setHeader('Retry-After', String(retryAfter));
+    throw new HttpError(429, 'account_locked', 'Too many failed attempts for this account. Try again later or reset your password.', { retryAfterSeconds: retryAfter });
+  }
   const { rows } = await pool.query('SELECT id, email, password_hash, display_name, email_verified_at FROM users WHERE lower(email) = $1', [input.email]);
   const u = rows[0];
   // Always run the KDF so response time does not reveal whether the email exists.
   const ok = await verifyPassword(input.password, u?.password_hash ?? DUMMY_HASH);
   if (!u || !ok) {
+    // Lock after LOCKOUT_THRESHOLD consecutive failures; the lock doubles on each further failure (max 24 h).
+    await pool.query(
+      `INSERT INTO login_attempts (email_hash, failures) VALUES ($1, 1)
+       ON CONFLICT (email_hash) DO UPDATE SET failures = login_attempts.failures + 1, updated_at = now(),
+         locked_until = CASE WHEN login_attempts.failures + 1 >= $2
+           THEN now() + LEAST(1440, $3 * power(2, login_attempts.failures + 1 - $2)) * interval '1 minute' ELSE login_attempts.locked_until END`,
+      [emailHash, LOCKOUT_THRESHOLD, LOCKOUT_BASE_MINUTES],
+    );
     await audit('auth.login_failed', u?.id ?? null, { ...clientMeta(req), details: { emailHash: hashToken(input.email).slice(0, 12) } });
     throw unauthorized('Invalid email or password');
   }
+  await pool.query('DELETE FROM login_attempts WHERE email_hash = $1', [emailHash]);
   const session = await createSession(u.id, clientMeta(req));
   setSessionCookie(res, session.token, session.expiresAt);
   await audit('auth.login', u.id, clientMeta(req));
@@ -114,6 +133,8 @@ authRouter.post('/reset-password', strict, asyncHandler(async (req, res) => {
     return rows[0].user_id as string;
   });
   await revokeAllSessions(userId);
+  const { rows: em } = await pool.query('SELECT lower(email) AS email FROM users WHERE id = $1', [userId]);
+  if (em[0]) await pool.query('DELETE FROM login_attempts WHERE email_hash = $1', [hashToken(`login:${em[0].email}`)]);
   await audit('auth.password_reset', userId, clientMeta(req));
   res.json({ ok: true });
 }));

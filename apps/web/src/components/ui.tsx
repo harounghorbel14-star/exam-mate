@@ -20,7 +20,7 @@ export function Spinner({ label }: { label?: string }) {
 export function ErrorState({ error, onRetry }: { error: unknown; onRetry?: () => void }) {
   const { t } = useI18n();
   const e = error as ApiError;
-  const msg = e?.status === 0 ? t('error.network') : e?.status === 401 ? t('error.unauthorized') : e?.code === 'quota_exceeded' ? t('plan.limitReached') : e?.status === 429 ? t('error.rateLimited') : (e?.message || t('common.error'));
+  const msg = e?.code === 'account_locked' ? t('error.accountLocked') : e?.status === 0 ? t('error.network') : e?.status === 401 ? t('error.unauthorized') : e?.code === 'quota_exceeded' ? t('plan.limitReached') : e?.status === 429 ? t('error.rateLimited') : (e?.message || t('common.error'));
   return (
     <div className="alert danger" role="alert">
       <div style={{ flex: 1 }}>{msg}</div>

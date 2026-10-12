@@ -85,3 +85,34 @@ describe('authentication', () => {
     expect(r.body.error.code).toBe('validation_error');
   });
 });
+
+describe('account lockout', () => {
+  it('locks an account after 5 failures, for real and unknown emails alike, and a reset unlocks it', async () => {
+    const u = await makeUser();
+    for (let i = 0; i < 5; i++) expect((await request(app).post('/api/auth/login').send({ email: u.email, password: 'wrong password!!' })).status).toBe(401);
+    const locked = await request(app).post('/api/auth/login').send({ email: u.email, password: u.password });
+    expect(locked.status).toBe(429);
+    expect(locked.body.error.code).toBe('account_locked');
+    expect(Number(locked.headers['retry-after'])).toBeGreaterThan(800);
+    // Unknown emails behave identically (no enumeration).
+    for (let i = 0; i < 5; i++) await request(app).post('/api/auth/login').send({ email: 'ghost@example.test', password: 'whatever12345' });
+    expect((await request(app).post('/api/auth/login').send({ email: 'ghost@example.test', password: 'whatever12345' })).body.error.code).toBe('account_locked');
+    // Other accounts are unaffected.
+    const v = await makeUser();
+    expect((await request(app).post('/api/auth/login').send({ email: v.email, password: v.password })).status).toBe(200);
+    // Password reset clears the lock.
+    await request(app).post('/api/auth/request-password-reset').send({ email: u.email });
+    const reset = await pool.query("SELECT body FROM outbox_emails WHERE to_email = $1 AND subject LIKE 'Reset%' ORDER BY created_at DESC LIMIT 1", [u.email]);
+    const token = /token=([A-Za-z0-9_-]+)/.exec(reset.rows[0].body)![1];
+    await request(app).post('/api/auth/reset-password').send({ token, password: 'a fresh new password' }).expect(200);
+    expect((await request(app).post('/api/auth/login').send({ email: u.email, password: 'a fresh new password' })).status).toBe(200);
+  });
+
+  it('resets the failure counter after a successful login', async () => {
+    const u = await makeUser();
+    for (let i = 0; i < 4; i++) await request(app).post('/api/auth/login').send({ email: u.email, password: 'wrong password!!' });
+    await request(app).post('/api/auth/login').send({ email: u.email, password: u.password }).expect(200);
+    for (let i = 0; i < 4; i++) await request(app).post('/api/auth/login').send({ email: u.email, password: 'wrong password!!' });
+    expect((await request(app).post('/api/auth/login').send({ email: u.email, password: u.password })).status).toBe(200);
+  });
+});

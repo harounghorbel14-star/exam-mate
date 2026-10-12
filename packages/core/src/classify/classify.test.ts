@@ -7,7 +7,7 @@ describe('subject classifier', () => {
     const r = evaluateBuiltin();
     // Report for visibility in CI logs.
     console.log(`subject classifier held-out accuracy: ${(r.accuracy * 100).toFixed(1)}% on ${r.n} examples`, r.errors);
-    expect(r.accuracy).toBeGreaterThanOrEqual(0.8);
+    expect(r.accuracy).toBeGreaterThanOrEqual(0.9);
   });
   it('classifies typical questions', () => {
     expect(classifySubject('Solve 3x + 2 = 11').subject).toBe('math');

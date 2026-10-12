@@ -397,4 +397,5 @@ export const ar: Record<MessageKey, string> = {
   'sync.now': 'زامن الآن',
   'settings.server': 'عنوان الخادم',
   'settings.mobileVoiceNote': 'تستخدم القراءة بصوت عالٍ صوت جهازك. الإدخال الصوتي متاح في تطبيق الويب.',
+  'error.accountLocked': 'محاولات فاشلة كثيرة. الحساب مقفل مؤقتًا — حاول لاحقًا أو أعد تعيين كلمة المرور.',
 };

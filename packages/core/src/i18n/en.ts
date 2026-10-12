@@ -395,6 +395,7 @@ export const en = {
   'sync.now': 'Sync now',
   'settings.server': 'Server address',
   'settings.mobileVoiceNote': 'Read-aloud uses your device voice. Voice input is available in the web app.',
+  'error.accountLocked': 'Too many failed attempts. This account is locked for a while — try again later or reset your password.',
 };
 
 export type MessageKey = keyof typeof en;

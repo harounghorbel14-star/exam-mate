@@ -397,4 +397,5 @@ export const fr: Record<MessageKey, string> = {
   'sync.now': 'Synchroniser',
   'settings.server': 'Adresse du serveur',
   'settings.mobileVoiceNote': 'La lecture à voix haute utilise la voix de l’appareil. La saisie vocale est disponible sur l’application web.',
+  'error.accountLocked': 'Trop de tentatives échouées. Ce compte est temporairement bloqué : réessaie plus tard ou réinitialise ton mot de passe.',
 };
