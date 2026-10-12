@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { mpInit, mpView } from '@exammate/core';
 import { AppProvider } from '../src/lib/app';
 import { PlayOnlineScreen } from '../src/screens/PlayOnlineScreen';
+import { linking } from '../src/lib/linking';
 
 /** Fake socket standing in for the server: answers auth, create and moves with snapshots. */
 class FakeSocket {
@@ -23,6 +24,11 @@ class FakeSocket {
       this.push({ type: 'ack', id: m.id });
     }
     if (m.type === 'move') this.push({ type: 'ack', id: m.id });
+    if (m.type === 'join') {
+      this.push({ type: 'room', room: { code: m.code, game: 'tic-tac-toe', maxPlayers: 2, status: 'lobby', hostId: 'u2', seq: 1, mySeat: 1, serverTime: Date.now(), view: null,
+        players: [{ userId: 'u2', name: 'B', avatar: '🐼', seat: 0, ready: false, connected: true, host: true }, { userId: 'u1', name: 'A', avatar: '🦊', seat: 1, ready: false, connected: true, host: false }] } });
+      this.push({ type: 'ack', id: m.id });
+    }
   }
   close() { this.readyState = 3; this.onclose?.({ code: 1000 }); }
 }
@@ -44,6 +50,16 @@ describe('mobile online play', () => {
     expect(screen.getByText('Your turn')).toBeTruthy();
     await act(async () => { await fireEvent.press(screen.getByLabelText('Row 2, column 2')); });
     expect(FakeSocket.last!.sent.at(-1)).toMatchObject({ type: 'move', step: 0, move: { cell: 4 } });
+  });
+
+  it('an invite deep link opens the room: exammate://play/<code> routes here and joins automatically', async () => {
+    const { getStateFromPath } = jest.requireActual('@react-navigation/native');
+    const state = getStateFromPath('play/ABC234', linking.config);
+    expect(state.routes[0]).toMatchObject({ name: 'PlayOnline', params: { code: 'ABC234' } });
+    await render(<AppProvider><PlayOnlineScreen route={{ params: { code: 'abc234' } }} /></AppProvider>);
+    expect(await screen.findByLabelText('Room code ABC234')).toBeTruthy();
+    expect(FakeSocket.last!.sent.find((m) => m.type === 'join')).toMatchObject({ code: 'ABC234' });
+    expect(screen.getByText("I'm ready")).toBeTruthy();
   });
 
   it('explains that online play needs an account and points to offline modes', async () => {

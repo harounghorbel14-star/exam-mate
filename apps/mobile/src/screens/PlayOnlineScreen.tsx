@@ -13,7 +13,8 @@ import { a, boardWidth, Key } from '../arcade/shared';
 const RPS: Record<string, string> = { rock: '✊', paper: '✋', scissors: '✌️' };
 
 /** Online multiplayer (needs an account and a connection). Offline play stays in the Arcade. */
-export function PlayOnlineScreen() {
+export function PlayOnlineScreen({ route }: { route?: { params?: { code?: string } } } = {}) {
+  const invited = route?.params?.code ? normalizeRoomCode(route.params.code) : null;
   const { t, locale, user, online } = useApp();
   const [room, setRoom] = useState<RoomSnapshot | null>(null);
   const [state, setState] = useState<ConnectionState>('idle');
@@ -22,6 +23,7 @@ export function PlayOnlineScreen() {
   const [max, setMax] = useState(2);
   const [code, setCode] = useState('');
   const ref = useRef<MultiplayerClient | null>(null);
+  const autoJoined = useRef(false);
 
   useEffect(() => {
     if (!user || !online) return;
@@ -42,6 +44,12 @@ export function PlayOnlineScreen() {
   }, [user, online, t]);
 
   const c = ref.current;
+  // Opened from an invite link: join that room once the socket is live.
+  useEffect(() => {
+    if (state !== 'online' || autoJoined.current || !invited || !isRoomCode(invited) || !ref.current) return;
+    autoJoined.current = true;
+    void ref.current.join(invited).catch(() => undefined);
+  }, [state, invited]);
   const run = (p: Promise<void> | undefined) => { void p?.catch(() => undefined); };
 
   if (!user) return <Screen><Title>🌐 {t('mp.title')}</Title><P>{t('auth.signInToUse')}</P><P muted>{t('mp.offlineHint')}</P></Screen>;
@@ -90,7 +98,7 @@ export function PlayOnlineScreen() {
       <Card>
         <View style={[s.row, { justifyContent: 'space-between' }]}>
           <Text style={{ color: colors.text, fontSize: 22, fontWeight: '800', letterSpacing: 3 }} accessibilityLabel={`${t('mp.code')} ${room.code}`}>{room.code}</Text>
-          <Key label={t('mp.invite')} onPress={() => void Share.share({ message: `${t('mp.join')}: ${room.code}` })} />
+          <Key label={t('mp.invite')} onPress={() => void Share.share({ message: `${t('mp.join')}: ${room.code}\nexammate://play/${room.code}` })} />
         </View>
         {room.players.map((p) => (
           <View key={p.userId} style={[s.row, { justifyContent: 'space-between' }]}>

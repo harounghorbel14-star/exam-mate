@@ -55,7 +55,9 @@
     - reaction-race times include each player's network latency (the server measures when the
       tap arrives), so it is only fair on similar connections;
     - private rooms only: no public matchmaking, spectators, chat or friend lists;
-    - mobile invites share the room code as text; there is no deep link that opens the app;
+    - mobile invites carry the room code and an `exammate://play/<code>` link that opens the app
+      straight into the room (tested in Jest only); there are no https universal/app links, which
+      need a verified domain;
     - trivia uses the bundled 24-question general-knowledge bank;
     - a ticket must be fetched over HTTPS before each connection, so online play needs an
       account; offline/pass-and-play modes stay in the Arcade.

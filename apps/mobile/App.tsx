@@ -19,6 +19,7 @@ import { ToolsScreen } from './src/screens/ToolsScreen';
 import { CoachScreen } from './src/screens/CoachScreen';
 import { ArcadeScreen, ArcadePlayScreen } from './src/screens/ArcadeScreen';
 import { PlayOnlineScreen } from './src/screens/PlayOnlineScreen';
+import { linking } from './src/lib/linking';
 
 const Tabs = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -42,7 +43,7 @@ function TabsRoot() {
 function Root() {
   const { t } = useApp();
   return (
-    <NavigationContainer theme={theme}>
+    <NavigationContainer theme={theme} linking={linking}>
       <Stack.Navigator>
         <Stack.Screen name="Tabs" component={TabsRoot} options={{ headerShown: false }} />
         <Stack.Screen name="GamePlay" component={GamePlayScreen as never} options={{ title: t('nav.games') }} />

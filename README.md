@@ -72,7 +72,7 @@ Set the API address in the app's **Settings → Server address**. The default is
 | `npm test -w @exammate/server` | 78 integration tests against a real PostgreSQL test DB (`exammate_test`), real OCR, the real llama.cpp runtime and real WebSocket clients |
 | `npm test -w @exammate/web` | 10 component tests (jsdom) |
 | `npm run e2e` | 27 Playwright tests: the original 6, all 15 arcade games played in the browser, and multiplayer between independent browser clients |
-| `npm run test:mobile` | 24 Jest tests rendering mobile screens (solver, games, arcade, online play, tools, coach, exams) |
+| `npm run test:mobile` | 25 Jest tests rendering mobile screens (solver, games, arcade, online play, tools, coach, exams) |
 | `npm run eval` | Agent benchmark suites; stores the run and fails on regressions |
 
 Current measured results are in [docs/TESTING.md](docs/TESTING.md).
