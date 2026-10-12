@@ -5,6 +5,7 @@ import path from 'node:path';
 
 export default defineConfig({
   resolve: {
+    dedupe: ['react', 'react-dom'],
     // Consume the shared core from source so the app always matches it.
     alias: [
       { find: /^@exammate\/core$/, replacement: path.resolve(__dirname, '../../packages/core/src/index.ts') },
