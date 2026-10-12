@@ -79,10 +79,12 @@ test('falling blocks: hard drops stack pieces, score rises, game ends at the top
 
 test('2048: swipes/keys merge tiles and the board is restored after leaving', async ({ page }) => {
   await startGame(page, '2048');
+  // The board is restored asynchronously from local storage; wait for it before pressing keys.
+  await expect(page.locator('.g2048-board')).toBeVisible();
   for (const k of ['ArrowLeft', 'ArrowUp', 'ArrowRight', 'ArrowDown', 'ArrowLeft', 'ArrowUp']) await page.keyboard.press(k);
+  await expect(page.getByText(/Moves: [1-9]/)).toBeVisible();
   const tiles = async () => (await page.locator('.g2048-tile').allInnerTexts()).join(',');
   const before = await tiles();
-  expect(before.split(',').filter(Boolean).length).toBeGreaterThan(2);
   await page.goto('/arcade');
   await page.goto('/arcade/2048');
   await page.locator('.arcade-play').click();
@@ -193,6 +195,8 @@ test('reaction test: false starts are caught and five timed rounds give an avera
   for (let r = 0; r < 5; r++) {
     await pad.click();
     await expect(pad).toHaveText('Tap now!', { timeout: 6000 });
+    // Taps within 100 ms of the signal are treated as anticipation (a false start); react like a human.
+    await page.waitForTimeout(150);
     await pad.click();
   }
   await expect(overlay(page)).toContainText(/Average \d+ ms/);

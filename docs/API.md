@@ -88,6 +88,26 @@ Base path: `/api`. JSON in and out, with request bodies validated by zod.
 - `GET /summary`
 - `GET /games`, `POST /games/sync` with `{records: GameProgressRecord[]}` → conflict-free merge
 - `GET /packs`, `GET /packs/:id` (content pack + SHA-256 of canonical JSON)
+- `GET /arcade`, `POST /arcade/sync` with `{records: ArcadeStatsRecord[]}` → conflict-free merge (bests never regress; per-device counters). Unknown game ids and out-of-range values are rejected.
+
+## Multiplayer — `/api/mp` and `/ws`
+- `POST /api/mp/ticket` (auth) → `{ticket, expiresAt, path: "/ws"}`. Single use, valid 60 s, stored hashed.
+- `GET /api/mp/rooms/:code` (auth) → `{room: {code, game, status, players, maxPlayers}}` for invite links (no identities).
+- WebSocket `/ws`: the first message must be `{type: "auth", ticket}` within 5 s (else close code 4001).
+  Then client messages, each with a unique action `id`: `create {game, maxPlayers}`, `join {code}`,
+  `leave`, `ready {ready}`, `select {game, maxPlayers?}` (host), `kick {userId}` (host),
+  `start` (host), `move {step, move}`, `rematch` (host), `ping`.
+  Moves: `{cell}` (tic-tac-toe), `{col}` (Connect Four), `{from, path[]}` (checkers),
+  `{choice: "rock"|"paper"|"scissors"}` (RPS), `{card}` (memory), `{tap: true}` (reaction),
+  `{choice: index}` (trivia). `step` must equal the `view.step` the client last saw.
+- Server messages: `welcome`, `room {room: RoomSnapshot}` (per-player view; hidden information removed),
+  `ack {id, duplicate?}`, `error {id?, code, message}`, `left`, `pong`.
+  Error codes: `unauthorized`, `bad_request`, `rate_limited`, `room_not_found`, `room_full`,
+  `already_started`, `not_host`, `not_in_room`, `not_ready`, `not_enough_players`, `not_your_turn`,
+  `illegal_move`, `stale`, `game_over`, `bad_move`, `kicked`.
+- Close codes: 4001 unauthorized, 4008 rate limited, 4009 too many connections (5 per user).
+  Messages are limited to 4 KB and ~6/s sustained (bursts of 30). Types live in
+  `packages/core/src/multiplayer/protocol.ts`.
 
 ## Account — `/api/account`
 - `GET` / `PUT /profile`, `GET` / `PUT /preferences`, `GET /usage`

@@ -398,7 +398,7 @@ export const fr: Record<MessageKey, string> = {
   'settings.server': 'Adresse du serveur',
   'settings.mobileVoiceNote': 'La lecture à voix haute utilise la voix de l’appareil. La saisie vocale est disponible sur l’application web.',
   'error.accountLocked': 'Trop de tentatives échouées. Ce compte est temporairement bloqué : réessaie plus tard ou réinitialise ton mot de passe.',
-  'demo.banner': 'Démo : tout fonctionne dans ton navigateur — solveur, outils, coach et les 15 jeux. Les comptes, documents, examens et le scan serveur nécessitent le serveur ExamMate.',
+  'demo.banner': 'Démo : tout fonctionne dans ton navigateur — solveur, outils, coach, les 15 jeux éducatifs et les 15 jeux de l’Arcade. Les comptes, documents, examens et le scan serveur nécessitent le serveur ExamMate.',
   'demo.needsServer': 'Cette section nécessite le serveur ExamMate, non connecté dans cette démo. Lance l’application complète en local pour l’essayer.',
   'nav.arcade': 'Arcade',
   'arcade.title': 'Arcade',

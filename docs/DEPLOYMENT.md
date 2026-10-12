@@ -49,10 +49,41 @@ CMD ["node", "--env-file-if-exists=.env", "apps/server/dist/index.js"]
 ```
 (This Dockerfile is not part of the tested pipeline; validate it in your environment.)
 
+## WebSockets (online multiplayer)
+
+Multiplayer runs on the **same Node process and port** as the API, at the path `/ws`. No extra
+service or SaaS is needed. Production requirements:
+
+- **TLS:** clients use `wss://` whenever the API is HTTPS (derived automatically from the page or
+  the mobile app's API URL).
+- **Reverse proxy upgrade headers.** For nginx:
+  ```nginx
+  location /ws {
+    proxy_pass http://exammate_api;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_set_header Host $host;
+    proxy_read_timeout 120s;   # above the 30 s server heartbeat
+  }
+  ```
+  Load balancers must allow WebSocket upgrades and an idle timeout above 30 s.
+- **Origins:** browser connections must come from an origin listed in `APP_ORIGINS`; native apps
+  send no Origin header and are accepted.
+- **Single instance.** Rooms are authoritative in one process's memory and written through to
+  PostgreSQL (`mp_rooms`), so a restart restores them, with game clocks paused for the downtime.
+  Running several API instances is **not supported yet**: it needs sticky routing by room code or
+  a shared pub/sub layer. Scale vertically or run a single API instance for now.
+- **Settings:** `MP_ENABLED` (default `true`), `MP_TURN_SECONDS` (30), `MP_RECONNECT_GRACE_SECONDS`
+  (60, after which a disconnected player forfeits or leaves the lobby), `MP_ROOM_IDLE_MINUTES`
+  (15, abandoned rooms are then closed).
+- Migrations `003_arcade.sql` and `004_multiplayer.sql` run automatically on start.
+- In development, Vite's dev and preview servers proxy `/ws` to `:4000`.
+
 ## Static demo build
 `npm run build:demo -w @exammate/web` writes `apps/web/dist-demo`: relative asset paths, in-memory routing,
 no service worker and a demo banner. It runs without the API, so only on-device features work
-(solver, tools, coach, offline games). Server features show a "needs the ExamMate server" note.
+(solver, tools, coach, offline and arcade games). Online multiplayer needs the server. Server features show a "needs the ExamMate server" note.
 
 ## Mobile
 ```bash

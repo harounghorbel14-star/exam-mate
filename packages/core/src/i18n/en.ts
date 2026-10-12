@@ -396,7 +396,7 @@ export const en = {
   'settings.server': 'Server address',
   'settings.mobileVoiceNote': 'Read-aloud uses your device voice. Voice input is available in the web app.',
   'error.accountLocked': 'Too many failed attempts. This account is locked for a while — try again later or reset your password.',
-  'demo.banner': 'Demo: everything here runs in your browser — the solver, tools, coach and all 15 games. Accounts, documents, exams and server photo scan need the ExamMate server.',
+  'demo.banner': 'Demo: everything here runs in your browser — the solver, tools, coach, the 15 learning games and the 15 arcade games. Accounts, documents, exams, online play and server photo scan need the ExamMate server.',
   'demo.needsServer': 'This section needs the ExamMate server, which is not connected in this demo. Run the full app locally to try it.',
   'nav.arcade': 'Arcade',
   'arcade.title': 'Arcade',

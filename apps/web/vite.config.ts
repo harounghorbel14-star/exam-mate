@@ -24,7 +24,7 @@ export default defineConfig({
       manifest: {
         name: 'ExamMate AI',
         short_name: 'ExamMate',
-        description: 'Private study companion: solver, documents, practice exams, flashcards and 15 offline games.',
+        description: 'Private study companion: solver, documents, practice exams, flashcards, 15 offline learning games and a 15-game arcade.',
         theme_color: '#0b1220',
         background_color: '#0b1220',
         display: 'standalone',
