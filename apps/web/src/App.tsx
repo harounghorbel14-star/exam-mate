@@ -22,6 +22,8 @@ const Games = lazy(() => import('./pages/Games'));
 const GamePlay = lazy(() => import('./pages/GamePlay'));
 const Arcade = lazy(() => import('./pages/Arcade'));
 const ArcadePlay = lazy(() => import('./pages/ArcadePlay'));
+const Play = lazy(() => import('./pages/Play'));
+const PlayRoom = lazy(() => import('./pages/PlayRoom'));
 const Flashcards = lazy(() => import('./pages/Flashcards'));
 const Progress = lazy(() => import('./pages/Progress'));
 const Settings = lazy(() => import('./pages/Settings'));
@@ -50,6 +52,8 @@ export function App() {
                   <Route path="games/:id" element={<GamePlay />} />
                   <Route path="arcade" element={<Arcade />} />
                   <Route path="arcade/:id" element={<ArcadePlay />} />
+                  <Route path="play" element={<Play />} />
+                  <Route path="play/:code" element={<PlayRoom />} />
                   <Route path="flashcards" element={<Flashcards />} />
                   <Route path="progress" element={<Progress />} />
                   <Route path="settings" element={<Settings />} />

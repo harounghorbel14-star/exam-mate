@@ -384,3 +384,7 @@ kbd { font-family: var(--mono); font-size: 0.8em; padding: 1px 6px; border-radiu
 .ck-piece.p1 { background: radial-gradient(circle at 35% 35%, #fecaca, #dc2626); color: #fff; }
 .ck-piece.p2 { background: radial-gradient(circle at 35% 35%, #e5e7eb, #1f2937); color: #facc15; }
 @media (prefers-reduced-motion: reduce) { .arcade-card, .mm-card, .c4-disc.drop, .rps-hand, .arcade-record { animation: none !important; transition: none !important; } }
+.room-code { font-size: 1.4rem; letter-spacing: 0.15em; }
+.choice.correct { border-color: var(--success); background: color-mix(in srgb, var(--success) 22%, transparent); }
+.choice.wrong { border-color: var(--danger); background: color-mix(in srgb, var(--danger) 18%, transparent); }
+.choice.selected { border-color: var(--primary); }
