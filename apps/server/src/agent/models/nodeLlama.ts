@@ -7,7 +7,7 @@ import { verifyModelFile } from './integrity.js';
  */
 export class NodeLlamaCppModel implements LocalModel {
   readonly id: string;
-  private loading: Promise<{ completion: { generateCompletion(p: string, o: Record<string, unknown>): Promise<string> }; context: { dispose(): Promise<void> }; model: { dispose(): Promise<void> }; gpu: string | false; loadMs: number; sizeBytes: number; verified: boolean }> | null = null;
+  private loading: Promise<{ completion: { generateCompletionWithMeta(p: string, o: Record<string, unknown>): Promise<{ response: string; metadata: { stopReason: string } }> }; context: { dispose(): Promise<void> }; model: { dispose(): Promise<void> }; gpu: string | false; loadMs: number; sizeBytes: number; verified: boolean }> | null = null;
   private lastError: string | null = null;
   private busy: Promise<unknown> = Promise.resolve();
 
@@ -51,12 +51,17 @@ export class NodeLlamaCppModel implements LocalModel {
     const run = async () => {
       const started = Date.now();
       const signal = opts.signal ? AbortSignal.any([opts.signal, AbortSignal.timeout(this.opts.timeoutMs)]) : AbortSignal.timeout(this.opts.timeoutMs);
-      let tokens = 0;
-      const text = await l.completion.generateCompletion(prompt, {
-        maxTokens: Math.min(opts.maxTokens ?? this.opts.maxTokens, this.opts.maxTokens), temperature: opts.temperature ?? 0.2,
+      const limit = Math.min(opts.maxTokens ?? this.opts.maxTokens, this.opts.maxTokens);
+      let released = 0;
+      const { response: text, metadata } = await l.completion.generateCompletionWithMeta(prompt, {
+        maxTokens: limit, temperature: opts.temperature ?? 0.2,
         signal, stopOnAbortSignal: true, customStopTriggers: opts.stop ?? [],
-        onToken: (t: unknown[]) => { tokens += t.length; },
+        onToken: (t: unknown[]) => { released += t.length; },
       });
+      // onToken batches are not a reliable count: tokens forming an incomplete UTF-8 character are held
+      // back and released together, so the callback total can be above or below the real number. When
+      // llama.cpp reports it stopped on the limit, exactly `limit` tokens were generated.
+      const tokens = metadata.stopReason === 'maxTokens' ? limit : Math.min(released, limit);
       return { text, tokens, ms: Date.now() - started };
     };
     const p = this.busy.then(run, run);
