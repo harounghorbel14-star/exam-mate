@@ -23,7 +23,7 @@ export function rotateMatrix(m: number[][], times: number): number[][] {
 }
 
 export interface Piece { kind: PieceKind; rot: number; x: number; y: number }
-export interface BlocksState { board: number[][]; piece: Piece; queue: PieceKind[]; hold: PieceKind | null; canHold: boolean; score: number; lines: number; level: number; over: boolean; seed: number; bags: number }
+export interface BlocksState { board: number[][]; piece: Piece; queue: PieceKind[]; hold: PieceKind | null; canHold: boolean; score: number; lines: number; level: number; startLevel: number; over: boolean; seed: number; bags: number }
 
 export function pieceCells(p: Piece): Array<[number, number]> {
   const m = rotateMatrix(SHAPES[p.kind], p.rot);
@@ -46,10 +46,11 @@ function spawn(kind: PieceKind): Piece {
   return { kind, rot: 0, x: kind === 'O' ? 4 : 3, y: kind === 'I' ? -1 : 0 };
 }
 
-export function blocksNew(seed: number): BlocksState {
+/** startLevel lets harder difficulties begin faster; the level then rises every 10 lines. */
+export function blocksNew(seed: number, startLevel = 1): BlocksState {
   const { queue, bags } = refill({ queue: [], seed, bags: 0 });
   const [first, ...rest] = queue;
-  return { board: Array.from({ length: BLOCKS_H }, () => Array(BLOCKS_W).fill(0)), piece: spawn(first!), queue: rest, hold: null, canHold: true, score: 0, lines: 0, level: 1, over: false, seed, bags };
+  return { board: Array.from({ length: BLOCKS_H }, () => Array(BLOCKS_W).fill(0)), piece: spawn(first!), queue: rest, hold: null, canHold: true, score: 0, lines: 0, level: startLevel, startLevel, over: false, seed, bags };
 }
 
 /** Gravity interval in ms for the current level. */
@@ -85,7 +86,7 @@ function lockPiece(s: BlocksState): BlocksState {
   const newBoard = [...Array.from({ length: cleared }, () => Array(BLOCKS_W).fill(0)), ...kept];
   const lines = s.lines + cleared;
   const score = s.score + LINE_POINTS[cleared]! * s.level;
-  const level = 1 + Math.floor(lines / 10);
+  const level = s.startLevel + Math.floor(lines / 10);
   const { queue, bags } = refill(s);
   const [next, ...rest] = queue;
   const piece = spawn(next!);

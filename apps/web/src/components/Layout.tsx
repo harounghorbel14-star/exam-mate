@@ -14,6 +14,7 @@ export const NAV: Array<{ to: string; key: MessageKey; icon: string; mobile?: bo
   { to: '/documents', key: 'nav.documents', icon: '▤' },
   { to: '/exams', key: 'nav.exams', icon: '✎' },
   { to: '/games', key: 'nav.games', icon: '◆', mobile: true },
+  { to: '/arcade', key: 'nav.arcade', icon: '🕹' },
   { to: '/flashcards', key: 'nav.flashcards', icon: '❏' },
   { to: '/progress', key: 'nav.progress', icon: '↗' },
   { to: '/settings', key: 'nav.settings', icon: '⚙', mobile: true },

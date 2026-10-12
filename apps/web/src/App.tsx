@@ -20,6 +20,8 @@ const Exams = lazy(() => import('./pages/Exams'));
 const ExamTake = lazy(() => import('./pages/ExamTake'));
 const Games = lazy(() => import('./pages/Games'));
 const GamePlay = lazy(() => import('./pages/GamePlay'));
+const Arcade = lazy(() => import('./pages/Arcade'));
+const ArcadePlay = lazy(() => import('./pages/ArcadePlay'));
 const Flashcards = lazy(() => import('./pages/Flashcards'));
 const Progress = lazy(() => import('./pages/Progress'));
 const Settings = lazy(() => import('./pages/Settings'));
@@ -46,6 +48,8 @@ export function App() {
                   <Route path="exams/:id" element={<ExamTake />} />
                   <Route path="games" element={<Games />} />
                   <Route path="games/:id" element={<GamePlay />} />
+                  <Route path="arcade" element={<Arcade />} />
+                  <Route path="arcade/:id" element={<ArcadePlay />} />
                   <Route path="flashcards" element={<Flashcards />} />
                   <Route path="progress" element={<Progress />} />
                   <Route path="settings" element={<Settings />} />

@@ -1,6 +1,8 @@
 import { GameProgressRepository } from '@exammate/core/games/engine';
 import { mergeGameProgress, type GameProgressRecord } from '@exammate/core/sync/merge';
-import { store, readJson, writeJson } from './kv';
+import { ArcadeRepository } from '@exammate/core/arcade/stats';
+import type { ArcadeStatsRecord } from '@exammate/core/arcade/stats';
+import { store, readJson, writeJson, deviceId } from './kv';
 import { api } from './api';
 
 export const gameRepo = new GameProgressRepository(store);
@@ -40,7 +42,20 @@ export async function flushQueues(): Promise<void> {
   if (practice.length) { await api('/progress/practice', { method: 'POST', body: { records: practice } }); writeJson(PRACTICE_QUEUE, []); }
 }
 
+/** Arcade stats sync: optional (only when signed in and online); the arcade never waits for it. */
+export async function syncArcade(): Promise<number> {
+  const repo = new ArcadeRepository(store, deviceId());
+  const all = await repo.allStats();
+  const dirty = await repo.dirty();
+  const records = dirty.map((id) => all[id]).filter(Boolean) as ArcadeStatsRecord[];
+  const res = await api<{ progress: unknown[] }>('/progress/arcade/sync', { method: 'POST', body: { records } });
+  await repo.mergeRemote(res.progress);
+  await repo.clearDirty(dirty);
+  return records.length;
+}
+
 export async function syncAll(): Promise<void> {
   await flushQueues();
   await syncGameProgress();
+  await syncArcade();
 }

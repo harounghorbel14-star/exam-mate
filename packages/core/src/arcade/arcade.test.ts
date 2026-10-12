@@ -611,3 +611,11 @@ describe('arcade stats and persistence', () => {
     expect(isArcadeStatsRecord(applyArcadeResult(undefined, { gameId: 'pong', outcome: 'win', playMs: 1 }, 'x', 1).stats)).toBe(true);
   });
 });
+
+describe('falling blocks start level', () => {
+  it('harder difficulties start at a higher level that persists after clears', () => {
+    const s = blocksNew(1, 4);
+    expect(s.level).toBe(4);
+    expect(blocksHardDrop(s).level).toBe(4);
+  });
+});
