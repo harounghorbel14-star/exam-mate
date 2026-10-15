@@ -6,7 +6,9 @@ interface AuthState {
   user: User | null;
   loading: boolean;
   guest: boolean;
-  login(email: string, password: string): Promise<void>;
+  /** Resolves to a challenge when the account needs a second factor; otherwise signs in. */
+  login(email: string, password: string): Promise<{ mfaChallenge?: string }>;
+  completeMfa(challenge: string, factor: { code?: string; recoveryCode?: string }): Promise<void>;
   register(email: string, password: string, displayName: string, locale: string): Promise<void>;
   logout(): Promise<void>;
   continueAsGuest(): void;
@@ -40,7 +42,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value: AuthState = {
     user, loading, guest, refresh,
     async login(email, password) {
-      const r = await api<{ user: User }>('/auth/login', { method: 'POST', body: { email, password } });
+      const r = await api<{ user?: User; mfaRequired?: boolean; challenge?: string }>('/auth/login', { method: 'POST', body: { email, password } });
+      if (r.mfaRequired && r.challenge) return { mfaChallenge: r.challenge };
+      setUser(r.user!);
+      return {};
+    },
+    async completeMfa(challenge, factor) {
+      const r = await api<{ user: User }>('/auth/login/mfa', { method: 'POST', body: { challenge, ...factor } });
       setUser(r.user);
     },
     async register(email, password, displayName, locale) {

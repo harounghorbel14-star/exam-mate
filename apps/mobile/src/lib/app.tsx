@@ -15,7 +15,9 @@ interface AppState {
   t: (k: MessageKey, p?: Record<string, string | number>) => string;
   user: User | null;
   online: boolean;
-  login(email: string, password: string): Promise<void>;
+  /** Resolves to a challenge when the account has two-factor authentication on. */
+  login(email: string, password: string): Promise<{ mfaChallenge?: string }>;
+  completeMfa(challenge: string, factor: { code?: string; recoveryCode?: string }): Promise<void>;
   register(email: string, password: string, name: string): Promise<void>;
   logout(): Promise<void>;
 }
@@ -52,7 +54,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
       return { needsRestart };
     },
     async login(email, password) {
-      const r = await api<{ user: User; token: string }>('/auth/login', { method: 'POST', body: { email, password } });
+      const r = await api<{ user?: User; token?: string; mfaRequired?: boolean; challenge?: string }>('/auth/login', { method: 'POST', body: { email, password } });
+      if (r.mfaRequired && r.challenge) return { mfaChallenge: r.challenge };
+      await setToken(r.token!); await writeJson('exammate.user', r.user); setUser(r.user!);
+      return {};
+    },
+    async completeMfa(challenge, factor) {
+      const r = await api<{ user: User; token: string }>('/auth/login/mfa', { method: 'POST', body: { challenge, ...factor } });
       await setToken(r.token); await writeJson('exammate.user', r.user); setUser(r.user);
     },
     async register(email, password, displayName) {

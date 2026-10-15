@@ -37,6 +37,10 @@ const schema = z.object({
   AGENT_MAX_STEPS: z.coerce.number().default(8),
   AGENT_TIMEOUT_MS: z.coerce.number().default(30000),
   TRACE_RETENTION_DAYS: z.coerce.number().default(30),
+  // Two-factor auth: 32-byte key (base64) used to encrypt TOTP secrets at rest. Required in production.
+  MFA_ENCRYPTION_KEY: z.string().default(''),
+  // Rate-limit counters: 'memory' (single process) or 'postgres' (shared by all API instances).
+  RATE_LIMIT_STORE: z.enum(['memory', 'postgres']).optional(),
   // Online multiplayer (WebSocket on the same server, path /ws).
   MP_ENABLED: bool.default(true),
   MP_TURN_SECONDS: z.coerce.number().int().min(5).max(600).default(30),
@@ -55,6 +59,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   if (cfg.NODE_ENV === 'production') {
     if (!cfg.COOKIE_SECURE) throw new Error('COOKIE_SECURE must be true in production');
     if (cfg.DATABASE_URL.includes('exammate_dev_password')) throw new Error('Set a real DATABASE_URL in production');
+    if (Buffer.from(cfg.MFA_ENCRYPTION_KEY, 'base64').length !== 32) throw new Error('Set MFA_ENCRYPTION_KEY to 32 random bytes (base64) in production');
   }
   return cfg;
 }

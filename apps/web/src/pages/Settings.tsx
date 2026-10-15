@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { TwoFactorSection } from '../components/TwoFactor';
 import { Link, useNavigate } from 'react-router-dom';
 import { SUPPORTED_LOCALES, LOCALES, type Locale, type MessageKey } from '@exammate/core';
 import { useI18n } from '../lib/i18n';
@@ -142,6 +143,8 @@ export default function Settings() {
             <span className="badge warning">{t('plan.testMode')}</span>
           </section>
         )}
+
+        {user && <TwoFactorSection />}
 
         <section className="card stack">
           <h2>{t('settings.privacy')}</h2>

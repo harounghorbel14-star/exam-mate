@@ -62,6 +62,16 @@ It is not a compliance certification; no external audit has been performed.
   requested only on tap; the Android microphone permission is explicitly blocked.
 - [x] **Voice (web):** speech recognition runs only while the button is active
   (`continuous: false`); nothing is recorded in the background.
+- [x] **Two-factor authentication (TOTP, RFC 6238):** optional per account. Turning it on needs
+  the password and a code from an authenticator app. Secrets are encrypted at rest with
+  AES-256-GCM (`MFA_ENCRYPTION_KEY`, required in production). Codes are accepted within ±30 s, and
+  each time step only once (replay protection). After a correct password, login returns a 5-minute
+  challenge with at most 5 attempts; no session exists until the second factor succeeds. There are
+  10 single-use recovery codes, stored hashed, which can be regenerated. Turning it off needs the
+  password plus a code. Every step is audited.
+- [x] **Shared rate limits:** with `RATE_LIMIT_STORE=postgres` (the default in production), the
+  global, auth and solve limiters count in PostgreSQL with one atomic upsert per request, so limits
+  hold across all API instances.
 - [x] **Multiplayer:** sockets authenticate with single-use, 60-second, hashed tickets issued by
   the authenticated API (no long-lived token in URLs); browser Origins are checked; messages are
   size-limited, strictly validated (unknown fields such as a client "score" are rejected) and rate
@@ -80,9 +90,7 @@ It is not a compliance certification; no external audit has been performed.
 - [ ] Malware scanning of uploads (e.g. ClamAV) before processing.
 - [ ] Encryption at rest for object storage and database (an infrastructure setting).
 - [ ] CAPTCHA after repeated failures.
-- [ ] MFA.
 - [ ] A real payment provider with signed webhooks.
 - [ ] Multiplayer across several API instances (needs sticky routing or pub/sub; single instance today).
-- [ ] Rate-limit store shared across instances (the current limiter is in-memory per process).
 - [ ] Test-mode checkout sessions are kept in memory; they are lost on restart and not shared
   between instances.

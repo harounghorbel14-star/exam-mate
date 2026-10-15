@@ -28,6 +28,11 @@ from a CDN and add its origin to `APP_ORIGINS`.
 - `NODE_ENV=production`, `COOKIE_SECURE=true` and HTTPS everywhere. The server refuses to start
   without secure cookies, or with the development database password.
 - `TRUST_PROXY=true` when running behind a reverse proxy, so rate limits see real client IPs.
+- `MFA_ENCRYPTION_KEY`: 32 random bytes, base64. The server refuses to start in production
+  without it. **Changing or losing it makes enrolled authenticator secrets unreadable**, and those
+  users would then need recovery codes. Keep it in a secret manager and back it up.
+- `RATE_LIMIT_STORE=postgres` (the default in production) shares rate-limit counters between
+  instances through the `rate_limits` table. Use `memory` only for a single process.
 - A dedicated PostgreSQL role with a strong password, backups, and TLS to the database.
 - `STORAGE_DIR` on persistent, private storage. For multiple API nodes, replace
   `LocalDiskStorage` with an S3-compatible implementation of the `ObjectStorage` interface

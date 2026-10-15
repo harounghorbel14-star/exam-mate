@@ -1,11 +1,13 @@
 import { Router } from 'express';
 import { rateLimit } from 'express-rate-limit';
 import { z } from 'zod';
+import { limiterStore } from '../rateLimitStore.js';
 import { pool, withTransaction } from '../../db/pool.js';
 import { config } from '../../config.js';
 import { hashPassword, verifyPassword, passwordProblems, DUMMY_HASH } from '../../auth/passwords.js';
 import { createSession, revokeSession, revokeAllSessions } from '../../auth/sessions.js';
 import { hashToken, newToken } from '../../auth/tokens.js';
+import { consumeSecondFactor } from './mfa.js';
 import { sendMail } from '../../auth/mailer.js';
 import { audit } from '../../services/audit.js';
 import { asyncHandler, body, clientMeta, requireAuth, SESSION_COOKIE } from '../middleware.js';
@@ -13,7 +15,7 @@ import { HttpError, badRequest, conflict, unauthorized } from '../errors.js';
 
 export const authRouter = Router();
 
-const strict = rateLimit({ windowMs: 15 * 60_000, limit: config.NODE_ENV === 'test' ? 1000 : 20, standardHeaders: 'draft-7', legacyHeaders: false, message: { error: { code: 'rate_limited', message: 'Too many attempts, try again later' } } });
+const strict = rateLimit({ windowMs: 15 * 60_000, limit: config.NODE_ENV === 'test' ? 1000 : 20, standardHeaders: 'draft-7', legacyHeaders: false, store: limiterStore('auth'), message: { error: { code: 'rate_limited', message: 'Too many attempts, try again later' } } });
 
 const Email = z.string().trim().toLowerCase().email().max(254);
 const Locale = z.enum(['en', 'fr', 'ar']).default('en');
@@ -63,7 +65,7 @@ authRouter.post('/login', strict, asyncHandler(async (req, res) => {
     res.setHeader('Retry-After', String(retryAfter));
     throw new HttpError(429, 'account_locked', 'Too many failed attempts for this account. Try again later or reset your password.', { retryAfterSeconds: retryAfter });
   }
-  const { rows } = await pool.query('SELECT id, email, password_hash, display_name, email_verified_at FROM users WHERE lower(email) = $1', [input.email]);
+  const { rows } = await pool.query('SELECT id, email, password_hash, display_name, email_verified_at, mfa_enabled_at FROM users WHERE lower(email) = $1', [input.email]);
   const u = rows[0];
   // Always run the KDF so response time does not reveal whether the email exists.
   const ok = await verifyPassword(input.password, u?.password_hash ?? DUMMY_HASH);
@@ -80,9 +82,44 @@ authRouter.post('/login', strict, asyncHandler(async (req, res) => {
     throw unauthorized('Invalid email or password');
   }
   await pool.query('DELETE FROM login_attempts WHERE email_hash = $1', [emailHash]);
+  if (u.mfa_enabled_at) {
+    // Password was right; a second factor is still needed before any session exists.
+    const challenge = newToken();
+    await pool.query("INSERT INTO mfa_challenges (token_hash, user_id, expires_at) VALUES ($1, $2, now() + interval '5 minutes')", [hashToken(challenge), u.id]);
+    await pool.query('DELETE FROM mfa_challenges WHERE expires_at < now()');
+    await audit('auth.login_mfa_challenge', u.id, clientMeta(req));
+    res.json({ mfaRequired: true, challenge });
+    return;
+  }
   const session = await createSession(u.id, clientMeta(req));
   setSessionCookie(res, session.token, session.expiresAt);
   await audit('auth.login', u.id, clientMeta(req));
+  res.json({ user: { id: u.id, email: u.email, displayName: u.display_name, emailVerified: !!u.email_verified_at }, token: session.token, expiresAt: session.expiresAt });
+}));
+
+export const MFA_MAX_ATTEMPTS = 5;
+
+/** Second login step: exchange the challenge plus a TOTP or recovery code for a session. */
+authRouter.post('/login/mfa', strict, asyncHandler(async (req, res) => {
+  const input = body(z.object({ challenge: z.string().min(10).max(200), code: z.string().trim().max(32).optional(), recoveryCode: z.string().trim().max(32).optional() }), req);
+  // Each attempt is counted atomically; a challenge dies after MFA_MAX_ATTEMPTS wrong codes or 5 minutes.
+  const { rows } = await pool.query(
+    'UPDATE mfa_challenges SET attempts = attempts + 1 WHERE token_hash = $1 AND expires_at > now() AND attempts < $2 RETURNING user_id',
+    [hashToken(input.challenge), MFA_MAX_ATTEMPTS],
+  );
+  if (!rows[0]) throw unauthorized('This sign-in attempt expired. Enter your password again.');
+  const userId = rows[0].user_id as string;
+  const used = await consumeSecondFactor(userId, input);
+  if (!used) {
+    await audit('auth.login_mfa_failed', userId, clientMeta(req));
+    throw unauthorized('Invalid code');
+  }
+  await pool.query('DELETE FROM mfa_challenges WHERE token_hash = $1', [hashToken(input.challenge)]);
+  const { rows: ur } = await pool.query('SELECT id, email, display_name, email_verified_at FROM users WHERE id = $1', [userId]);
+  const u = ur[0];
+  const session = await createSession(u.id, clientMeta(req));
+  setSessionCookie(res, session.token, session.expiresAt);
+  await audit('auth.login', u.id, { ...clientMeta(req), details: { secondFactor: used } });
   res.json({ user: { id: u.id, email: u.email, displayName: u.display_name, emailVerified: !!u.email_verified_at }, token: session.token, expiresAt: session.expiresAt });
 }));
 

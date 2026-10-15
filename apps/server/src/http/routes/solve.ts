@@ -2,6 +2,7 @@ import { Router } from 'express';
 import multer from 'multer';
 import { rateLimit, ipKeyGenerator } from 'express-rate-limit';
 import { z } from 'zod';
+import { limiterStore } from '../rateLimitStore.js';
 import { splitQuestions, detectLanguage, SUBJECT_LABELS } from '@exammate/core';
 import { pool } from '../../db/pool.js';
 import { config } from '../../config.js';
@@ -16,7 +17,7 @@ import { HttpError, badRequest, notFound } from '../errors.js';
 export const solveRouter = Router();
 solveRouter.use(['/solve', '/questions', '/solutions', '/scan'], requireAuth);
 
-const solveLimiter = rateLimit({ windowMs: 60_000, limit: config.NODE_ENV === 'test' ? 1000 : 30, standardHeaders: 'draft-7', legacyHeaders: false, keyGenerator: (req) => req.user?.id ?? ipKeyGenerator(req.ip ?? '0.0.0.0'), message: { error: { code: 'rate_limited', message: 'Too many requests' } } });
+const solveLimiter = rateLimit({ windowMs: 60_000, limit: config.NODE_ENV === 'test' ? 1000 : 30, standardHeaders: 'draft-7', legacyHeaders: false, store: limiterStore('solve'), keyGenerator: (req) => req.user?.id ?? ipKeyGenerator(req.ip ?? '0.0.0.0'), message: { error: { code: 'rate_limited', message: 'Too many requests' } } });
 
 async function assertNotInAssessment(userId: string) {
   const { rows } = await pool.query('SELECT assessment_mode FROM preferences WHERE user_id = $1', [userId]);

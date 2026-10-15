@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useI18n } from '../lib/i18n';
 import { useAuth } from '../lib/auth';
-import { api } from '../lib/api';
+import { api, ApiError } from '../lib/api';
 import { ErrorState } from '../components/ui';
 
 type Mode = 'login' | 'register' | 'forgot' | 'reset' | 'verify';
@@ -18,6 +18,9 @@ export default function AuthPages({ mode }: { mode: Mode }) {
   const [error, setError] = useState<unknown>(null);
   const [done, setDone] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [challenge, setChallenge] = useState<string | null>(null);
+  const [code, setCode] = useState('');
+  const [useRecovery, setUseRecovery] = useState(false);
   const token = params.get('token') ?? '';
 
   useEffect(() => {
@@ -29,11 +32,23 @@ export default function AuthPages({ mode }: { mode: Mode }) {
     e.preventDefault();
     setBusy(true); setError(null);
     try {
-      if (mode === 'login') { await auth.login(email, password); nav('/'); }
+      if (mode === 'login' && challenge) {
+        await auth.completeMfa(challenge, useRecovery ? { recoveryCode: code } : { code: code.replace(/\s/g, '') });
+        nav('/');
+      } else if (mode === 'login') {
+        const r = await auth.login(email, password);
+        if (r.mfaChallenge) { setChallenge(r.mfaChallenge); setCode(''); setPassword(''); } else nav('/');
+      }
       else if (mode === 'register') { await auth.register(email, password, name, locale); nav('/onboarding'); }
       else if (mode === 'forgot') { await api('/auth/request-password-reset', { method: 'POST', body: { email } }); setDone(t('auth.resetSent')); }
       else if (mode === 'reset') { await api('/auth/reset-password', { method: 'POST', body: { token, password } }); setDone(t('common.saved')); setTimeout(() => nav('/login'), 800); }
-    } catch (err) { setError(err); } finally { setBusy(false); }
+    } catch (err) {
+      // An expired or exhausted challenge sends the user back to the password step.
+      if (challenge && err instanceof ApiError && err.status === 401 && /expired/i.test(err.message)) { setChallenge(null); setError(new Error(t('mfa.expired'))); }
+      else if (challenge && err instanceof ApiError && err.status === 401) setError(new Error(t('mfa.invalid')));
+      else if (mode === 'login' && err instanceof ApiError && err.status === 401) setError(new Error(t('auth.invalidCredentials')));
+      else setError(err);
+    } finally { setBusy(false); }
   };
 
   const title = mode === 'login' ? t('auth.login') : mode === 'register' ? t('auth.register') : mode === 'verify' ? t('auth.verifyEmail') : t('auth.reset');
@@ -43,7 +58,20 @@ export default function AuthPages({ mode }: { mode: Mode }) {
         <h1>{title}</h1>
         {done && <div className="alert success" role="status">{done}</div>}
         {error !== null && <ErrorState error={error} />}
-        {mode !== 'verify' && !done && (
+        {mode === 'login' && challenge && (
+          <form className="stack" onSubmit={submit} aria-labelledby="mfa-title">
+            <h2 id="mfa-title" style={{ margin: 0 }}>{t('mfa.loginTitle')}</h2>
+            <p className="muted" style={{ margin: 0 }}>{useRecovery ? t('mfa.recoveryHelp') : t('mfa.loginHelp')}</p>
+            <div className="field">
+              <label htmlFor="mfa-code">{useRecovery ? t('mfa.recoveryCode') : t('mfa.code')}</label>
+              <input id="mfa-code" className="input mono" required autoFocus value={code} onChange={(e) => setCode(e.target.value)}
+                {...(useRecovery ? { autoComplete: 'off' } : { inputMode: 'numeric' as const, autoComplete: 'one-time-code', pattern: '[0-9 ]{6,7}', maxLength: 7 })} />
+            </div>
+            <button className="btn primary block" disabled={busy}>{busy ? t('common.loading') : t('mfa.verify')}</button>
+            <button type="button" className="btn ghost" onClick={() => { setUseRecovery((x) => !x); setCode(''); }}>{useRecovery ? t('mfa.useApp') : t('mfa.useRecovery')}</button>
+          </form>
+        )}
+        {mode !== 'verify' && !done && !challenge && (
           <form className="stack" onSubmit={submit}>
             {mode === 'register' && <div className="field"><label htmlFor="name">{t('auth.name')}</label><input id="name" className="input" required maxLength={60} value={name} onChange={(e) => setName(e.target.value)} autoComplete="nickname" /></div>}
             {mode !== 'reset' && <div className="field"><label htmlFor="email">{t('auth.email')}</label><input id="email" className="input" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" /></div>}

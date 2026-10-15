@@ -28,12 +28,14 @@
    webhooks) is required before charging anyone. Test checkout sessions live in process memory.
 8. **Email delivery:** messages go to the `outbox_emails` table; no SMTP transport is
    configured.
-9. **Scale:** the rate limiter and test-checkout state are in-memory per process; object storage
+9. **Scale:** rate limits can be shared through PostgreSQL (`RATE_LIMIT_STORE=postgres`), but
+   test-checkout state is still in-memory per process; object storage
    is local disk. Use shared stores and S3-compatible storage for multiple instances.
 10. **Translations** were written for this build and have not been reviewed by native speakers.
     Bundled game content is moderate in size (e.g. 24 general-knowledge and 20 biology
     questions, 54 countries); more can be added as downloadable packs.
-11. **Not done:** geometry diagram rendering, MFA, upload malware scanning, CAPTCHA, LoRA
+11. **Not done:** geometry diagram rendering, WebAuthn/passkeys (two-factor is TOTP only; it is turned on from
+    the web app, and mobile supports the sign-in step), upload malware scanning, CAPTCHA, LoRA
     fine-tuning tooling.
 12. **Arcade:**
     - played and tested in Chromium and in Jest/React Native Testing Library only; **never on a

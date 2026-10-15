@@ -6,9 +6,11 @@ import { rateLimit } from 'express-rate-limit';
 import path from 'node:path';
 import { existsSync } from 'node:fs';
 import { config } from '../config.js';
+import { limiterStore } from './rateLimitStore.js';
 import { pool } from '../db/pool.js';
 import { loadUser, csrfGuard, errorHandler, CSRF_HEADER } from './middleware.js';
 import { authRouter } from './routes/auth.js';
+import { mfaRouter } from './routes/mfa.js';
 import { accountRouter } from './routes/account.js';
 import { solveRouter } from './routes/solve.js';
 import { documentsRouter } from './routes/documents.js';
@@ -38,7 +40,7 @@ export function createApp(opts: { rooms?: RoomManager } = {}) {
   app.use('/api', cors({ origin: (o, cb) => cb(null, !o || origins.includes(o)), credentials: true, allowedHeaders: ['content-type', 'authorization', CSRF_HEADER] }));
   app.use(express.json({ limit: '1mb' }));
   app.use(cookieParser());
-  app.use('/api', rateLimit({ windowMs: 60_000, limit: config.NODE_ENV === 'test' ? 10_000 : 300, standardHeaders: 'draft-7', legacyHeaders: false }));
+  app.use('/api', rateLimit({ windowMs: 60_000, limit: config.NODE_ENV === 'test' ? 10_000 : 300, standardHeaders: 'draft-7', legacyHeaders: false, store: limiterStore('global') }));
   app.use('/api', loadUser, csrfGuard);
   app.use('/api', (_req, res, next) => { res.setHeader('Cache-Control', 'no-store'); next(); });
 
@@ -46,6 +48,7 @@ export function createApp(opts: { rooms?: RoomManager } = {}) {
     const db = await pool.query('SELECT 1').then(() => 'ok').catch(() => 'down');
     res.status(db === 'ok' ? 200 : 503).json({ status: db === 'ok' ? 'ok' : 'degraded', db, time: new Date().toISOString() });
   });
+  app.use('/api/auth/mfa', mfaRouter);
   app.use('/api/auth', authRouter);
   app.use('/api/account', accountRouter);
   app.use('/api', solveRouter);

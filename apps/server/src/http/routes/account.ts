@@ -144,7 +144,7 @@ accountRouter.delete('/notes/:id', asyncHandler(async (req, res) => {
 
 // ---- Data export and account deletion ----
 const EXPORT_QUERIES: Record<string, string> = {
-  user: 'SELECT id, email, display_name, created_at, email_verified_at FROM users WHERE id = $1',
+  user: 'SELECT id, email, display_name, created_at, email_verified_at, mfa_enabled_at FROM users WHERE id = $1',
   profile: 'SELECT * FROM profiles WHERE user_id = $1',
   preferences: 'SELECT * FROM preferences WHERE user_id = $1',
   subjects: 'SELECT * FROM study_subjects WHERE user_id = $1',

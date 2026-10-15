@@ -36,6 +36,16 @@ Base path: `/api`. JSON in and out, with request bodies validated by zod.
 | POST | `/reset-password` | `{token, password}` | Single-use, 30 min; revokes all sessions |
 | GET / DELETE | `/sessions`, `/sessions/:id` | – | List and revoke devices |
 
+## Two-factor — `/api/auth/mfa` (signed in) and `/api/auth/login/mfa`
+- `GET /api/auth/mfa` → `{enabled, enabledAt, recoveryCodesRemaining}`
+- `POST /setup` with `{password}` → `{secret, otpauthUri}`. It stays pending until it is confirmed.
+- `POST /enable` with `{code}` → `{enabled: true, recoveryCodes[10]}`. The codes are shown only once.
+- `POST /disable` with `{password, code | recoveryCode}`
+- `POST /recovery-codes` with `{code}` → a new set; the old set stops working.
+- Login with 2FA on: `POST /api/auth/login` returns `{mfaRequired: true, challenge}`, with no
+  session and no cookie. Then `POST /api/auth/login/mfa` with `{challenge, code | recoveryCode}`
+  returns the normal login response. A challenge expires after 5 minutes or 5 wrong codes.
+
 ## Solving — `/api`
 | Method | Path | Notes |
 |---|---|---|
